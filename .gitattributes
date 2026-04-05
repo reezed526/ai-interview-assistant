@@ -1,0 +1,3 @@
+# 统一行尾为 LF（跨平台协作）
+* text=auto eol=lf
+*.bat text eol=crlf
