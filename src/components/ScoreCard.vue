@@ -1,44 +1,38 @@
 <template>
   <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
-
-    <!-- 头部：点击展开/收起 -->
     <button
       class="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50/70 transition-colors"
       @click="expanded = !expanded"
     >
-      <!-- 题号 -->
       <span class="shrink-0 w-7 h-7 rounded-xl bg-gray-100 text-xs font-semibold text-gray-600 flex items-center justify-center">
         {{ index }}
       </span>
 
-      <!-- 题目文字 -->
       <p class="flex-1 text-sm font-medium text-gray-900 leading-snug line-clamp-2">
         {{ review.question }}
       </p>
 
-      <!-- 得分 + 展开箭头 -->
       <div class="shrink-0 flex items-center gap-2">
         <span class="text-base font-bold" :class="scoreColor">{{ review.score }}</span>
         <svg
           class="w-4 h-4 text-gray-400 transition-transform duration-200"
           :class="expanded ? 'rotate-180' : ''"
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2.5"
         >
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
         </svg>
       </div>
     </button>
 
-    <!-- 折叠内容 -->
     <Transition name="collapse">
       <div v-if="expanded" class="px-5 pb-4 space-y-3 border-t border-gray-50">
-
-        <!-- 我的回答摘要 -->
         <div class="pt-3 text-sm text-gray-500 leading-relaxed">
           <span class="font-medium text-gray-700">我的回答：</span>{{ review.userAnswer }}
         </div>
 
-        <!-- 点评 -->
         <div class="bg-amber-50 border border-amber-100 rounded-xl p-3.5">
           <div class="flex items-center gap-1.5 mb-1">
             <span class="text-sm">⚠️</span>
@@ -47,7 +41,6 @@
           <p class="text-sm text-amber-900 leading-relaxed">{{ review.feedback }}</p>
         </div>
 
-        <!-- 改进方向 -->
         <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
           <div class="flex items-center gap-1.5 mb-1">
             <span class="text-sm">✅</span>
@@ -56,7 +49,6 @@
           <p class="text-sm text-emerald-900 leading-relaxed">{{ review.betterDirection }}</p>
         </div>
 
-        <!-- 保存按钮 -->
         <button
           @click="handleSave"
           :disabled="saved"
@@ -79,7 +71,7 @@ import { ref, computed } from 'vue'
 
 const props = defineProps({
   review: { type: Object, required: true },
-  index:  { type: Number, required: true },
+  index: { type: Number, required: true },
 })
 
 const emit = defineEmits(['save-to-notebook'])
@@ -94,7 +86,10 @@ const scoreColor = computed(() => {
 })
 
 function handleSave() {
-  if (saved.value) return
+  if (saved.value) {
+    return
+  }
+
   emit('save-to-notebook')
   saved.value = true
 }

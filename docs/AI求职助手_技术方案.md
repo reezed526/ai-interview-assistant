@@ -30,7 +30,7 @@ AI求职助手是一款帮助应届生模拟面试的Web产品。用户选择目
 | 本地存储 | localStorage | 错题本、历史记录 |
 | AI接口 | DeepSeek API (deepseek-chat / V3.2) | 兼容OpenAI格式，中文能力强，成本极低 |
 | 中间层 | Vercel Serverless Functions (Node.js) | API代理+Prompt组装 |
-| 部署 | Vercel | 免费，零配置 |
+| 部署 | 腾讯云 EdgeOne Pages / 阿里云等类似服务 | 国内访问速度快，支持自动构建部署 |
 | 图表 | Chart.js 或 ECharts | 雷达图评分展示 |
 
 > **为什么选DeepSeek而非Claude/GPT？**
@@ -389,10 +389,16 @@ npm install openai   # DeepSeek兼容OpenAI SDK
 - 响应式适配（手机端）
 - 加载状态、错误处理、空状态
 
-### Step 9：部署到Vercel（1小时）
+### Step 9：部署到国内平台（最推荐，1-2小时）
+- 推荐平台：腾讯云 EdgeOne Pages 或阿里云等类似静态站点/边缘托管服务
 - 连接GitHub仓库
 - 配置环境变量（DEEPSEEK_API_KEY）
 - 部署上线
+- 如果使用国内节点并绑定正式域名，按平台要求完成ICP备案
+
+**说明：**
+- 这是对国内用户最稳定、最彻底的方案，国内访问速度和稳定性都会明显优于海外平台
+- 这些平台同样支持 Git 自动构建部署，后续只需 `git push`，平台就会自动重新构建并上线
 
 ---
 

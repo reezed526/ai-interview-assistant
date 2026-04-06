@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 pb-16">
-
-    <!-- 顶部导航 -->
     <header class="bg-white border-b border-gray-100 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
       <div class="flex items-center gap-3">
         <RouterLink to="/" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
@@ -14,7 +12,7 @@
           <p class="text-xs text-gray-400 mt-0.5">共 {{ store.totalCount }} 道题</p>
         </div>
       </div>
-      <!-- 清空按钮 -->
+
       <button
         v-if="store.totalCount > 0"
         @click="showClearConfirm = true"
@@ -24,10 +22,7 @@
       </button>
     </header>
 
-    <!-- 有内容 -->
     <div v-if="store.totalCount > 0" class="max-w-xl mx-auto px-4 mt-5 space-y-4">
-
-      <!-- 统计卡片 -->
       <div class="grid grid-cols-3 gap-3">
         <div class="bg-white rounded-2xl p-4 text-center shadow-sm">
           <p class="text-2xl font-bold text-gray-900">{{ store.totalCount }}</p>
@@ -43,13 +38,12 @@
         </div>
       </div>
 
-      <!-- 岗位筛选 -->
       <div v-if="store.jobTypes.length > 1" class="flex gap-2 flex-wrap">
         <button
           @click="activeFilter = ''"
           :class="[
             'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
-            activeFilter === '' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-200'
+            activeFilter === '' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-200',
           ]"
         >
           全部
@@ -60,26 +54,23 @@
           @click="activeFilter = type"
           :class="[
             'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
-            activeFilter === type ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-200'
+            activeFilter === type ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-200',
           ]"
         >
           {{ type }}
         </button>
       </div>
 
-      <!-- 题目列表 -->
       <TransitionGroup name="list" tag="div" class="space-y-3">
         <div
           v-for="entry in filteredEntries"
           :key="entry.id"
           class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100"
         >
-          <!-- 卡片头部 -->
           <button
             class="w-full flex items-start gap-3 px-4 py-4 text-left hover:bg-gray-50/70 transition-colors"
             @click="toggleEntry(entry.id)"
           >
-            <!-- 得分圆圈 -->
             <div
               class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white mt-0.5"
               :class="entry.score >= 80 ? 'bg-green-500' : entry.score >= 60 ? 'bg-yellow-400' : 'bg-red-400'"
@@ -102,27 +93,28 @@
             <svg
               class="w-4 h-4 text-gray-400 shrink-0 mt-1 transition-transform duration-200"
               :class="expandedIds.has(entry.id) ? 'rotate-180' : ''"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
             >
               <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
 
-          <!-- 折叠详情 -->
           <Transition name="collapse">
             <div v-if="expandedIds.has(entry.id)" class="border-t border-gray-50 px-4 pb-4 pt-3 space-y-3">
-
               <div class="text-sm text-gray-500 leading-relaxed">
                 <span class="font-medium text-gray-700">我的回答：</span>{{ entry.userAnswer }}
               </div>
 
               <div class="bg-amber-50 border border-amber-100 rounded-xl p-3">
-                <p class="text-xs font-semibold text-amber-700 mb-1">⚠️ 不足之处</p>
+                <p class="text-xs font-semibold text-amber-700 mb-1">不足之处</p>
                 <p class="text-sm text-amber-900 leading-relaxed">{{ entry.feedback }}</p>
               </div>
 
               <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-                <p class="text-xs font-semibold text-emerald-700 mb-1">✅ 更好的方向</p>
+                <p class="text-xs font-semibold text-emerald-700 mb-1">更好的方向</p>
                 <p class="text-sm text-emerald-900 leading-relaxed">{{ entry.betterDirection }}</p>
               </div>
 
@@ -142,19 +134,18 @@
         </div>
       </TransitionGroup>
 
-      <!-- 筛选结果为空 -->
       <div v-if="filteredEntries.length === 0" class="text-center py-12 text-gray-400 text-sm">
-        该岗位暂无错题
+        当前岗位下还没有错题记录。
       </div>
     </div>
 
-    <!-- 空状态 -->
     <div v-else class="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center">
-      <div class="text-6xl mb-5">📖</div>
+      <div class="text-6xl mb-5">📝</div>
       <h2 class="text-lg font-semibold text-gray-700 mb-2">错题本还是空的</h2>
       <p class="text-sm text-gray-400 mb-8 leading-relaxed">
-        完成面试后，在报告页点击<br/>
-        「保存到错题本」即可归档答错的题目
+        完成一次面试后，可以在报告页把题目保存到错题本，
+        <br />
+        方便后续集中复盘。
       </p>
       <RouterLink
         to="/"
@@ -164,7 +155,6 @@
       </RouterLink>
     </div>
 
-    <!-- 清空确认弹窗 -->
     <Transition name="overlay">
       <div
         v-if="showClearConfirm"
@@ -173,7 +163,7 @@
       >
         <div class="bg-white rounded-t-3xl w-full max-w-lg px-6 pt-6 pb-10">
           <h3 class="text-base font-bold text-gray-900 mb-1">清空错题本</h3>
-          <p class="text-sm text-gray-500 mb-6">所有 {{ store.totalCount }} 道错题将被删除，此操作无法撤销。</p>
+          <p class="text-sm text-gray-500 mb-6">当前 {{ store.totalCount }} 道错题将被删除，此操作无法撤销。</p>
           <div class="flex gap-3">
             <button
               @click="showClearConfirm = false"
@@ -191,7 +181,6 @@
         </div>
       </div>
     </Transition>
-
   </div>
 </template>
 
@@ -202,37 +191,41 @@ import { useNotebookStore } from '@/stores/notebook.js'
 
 const store = useNotebookStore()
 
-const activeFilter  = ref('')
-const expandedIds   = ref(new Set())
+const activeFilter = ref('')
+const expandedIds = ref(new Set())
 const showClearConfirm = ref(false)
 
-// ── 计算 ─────────────────────────────────────────────
 const filteredEntries = computed(() =>
   activeFilter.value
-    ? store.entries.filter((e) => e.jobType === activeFilter.value)
-    : store.entries
+    ? store.entries.filter((entry) => entry.jobType === activeFilter.value)
+    : store.entries,
 )
 
 const weakCount = computed(() =>
-  store.entries.filter((e) => (e.score ?? 100) < 60).length
+  store.entries.filter((entry) => (entry.score ?? 100) < 60).length,
 )
 
 const avgScoreColor = computed(() => {
-  const s = store.avgScore
-  if (s >= 80) return 'text-green-600'
-  if (s >= 60) return 'text-yellow-500'
+  const score = store.avgScore
+  if (score >= 80) return 'text-green-600'
+  if (score >= 60) return 'text-yellow-500'
   return 'text-red-500'
 })
 
-// ── 操作 ─────────────────────────────────────────────
 function toggleEntry(id) {
-  const s = new Set(expandedIds.value)
-  s.has(id) ? s.delete(id) : s.add(id)
-  expandedIds.value = s
+  const next = new Set(expandedIds.value)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
+  expandedIds.value = next
 }
 
 function removeEntry(id) {
-  expandedIds.value.delete(id)
+  const next = new Set(expandedIds.value)
+  next.delete(id)
+  expandedIds.value = next
   store.removeEntry(id)
 }
 
@@ -243,24 +236,24 @@ function handleClearAll() {
 }
 
 function formatDate(iso) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const date = new Date(iso)
+  return date.toLocaleDateString('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 </script>
 
 <style scoped>
-/* 列表增删动画 */
 .list-enter-active { transition: all 0.25s ease; }
 .list-leave-active { transition: all 0.2s ease; position: absolute; width: 100%; }
-.list-enter-from   { opacity: 0; transform: translateY(-8px); }
-.list-leave-to     { opacity: 0; transform: translateX(20px); }
-
-/* 折叠动画 */
+.list-enter-from { opacity: 0; transform: translateY(-8px); }
+.list-leave-to { opacity: 0; transform: translateX(20px); }
 .collapse-enter-active, .collapse-leave-active { transition: all 0.2s ease; overflow: hidden; }
-.collapse-enter-from, .collapse-leave-to       { max-height: 0; opacity: 0; }
-.collapse-enter-to, .collapse-leave-from       { max-height: 600px; opacity: 1; }
-
-/* 弹窗 */
+.collapse-enter-from, .collapse-leave-to { max-height: 0; opacity: 0; }
+.collapse-enter-to, .collapse-leave-from { max-height: 600px; opacity: 1; }
 .overlay-enter-active, .overlay-leave-active { transition: opacity 0.2s ease; }
-.overlay-enter-from, .overlay-leave-to       { opacity: 0; }
+.overlay-enter-from, .overlay-leave-to { opacity: 0; }
 </style>

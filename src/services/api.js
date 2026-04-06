@@ -6,22 +6,24 @@
  * @param {string}   params.jobDescription
  * @param {Array}    params.messages          - 历史消息（不含本次 AI 占位气泡）
  * @param {number}   params.questionCount
+ * @param {number}   params.totalQuestionCount
  * @param {number}   params.followUpCount
  * @param {function} params.onChunk           - 每收到一段文字调用一次
- * @returns {Promise<void>}
+ * @returns {Promise<{ action: string, questionIndex: number } | null>}
  */
 export async function sendChatMessage({
   jobType,
   jobDescription,
   messages,
   questionCount,
+  totalQuestionCount,
   followUpCount,
   onChunk,
 }) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jobType, jobDescription, messages, questionCount, followUpCount }),
+    body: JSON.stringify({ jobType, jobDescription, messages, questionCount, totalQuestionCount, followUpCount }),
   })
 
   if (!response.ok) {
@@ -33,6 +35,7 @@ export async function sendChatMessage({
   const decoder = new TextDecoder()
   // 跨 chunk 的不完整行需要缓冲，否则会漏掉内容
   let lineBuffer = ''
+  let meta = null
 
   while (true) {
     const { done, value } = await reader.read()
@@ -48,10 +51,14 @@ export async function sendChatMessage({
       if (!line.startsWith('data: ')) continue
 
       const payload = line.slice(6).trim()
-      if (payload === '[DONE]') return
+      if (payload === '[DONE]') return meta
 
       try {
         const parsed = JSON.parse(payload)
+        if (parsed.meta) {
+          meta = parsed.meta
+          continue
+        }
         // 错误帧
         if (parsed.error) throw new Error(parsed.error)
         // 内容帧
@@ -65,6 +72,8 @@ export async function sendChatMessage({
       }
     }
   }
+
+  return meta
 }
 
 /**

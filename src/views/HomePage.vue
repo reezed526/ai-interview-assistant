@@ -1,21 +1,29 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 flex flex-col">
-
-    <!-- 顶部导航栏 -->
     <header class="flex items-center justify-between px-6 py-4">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
           <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
           </svg>
         </div>
         <span class="font-bold text-gray-900 text-sm">AI 求职助手</span>
       </div>
-      <RouterLink to="/notebook" class="relative flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+
+      <RouterLink
+        to="/notebook"
+        class="relative flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+      >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+          />
         </svg>
         错题本
         <span
@@ -25,28 +33,26 @@
       </RouterLink>
     </header>
 
-    <!-- 主体内容 -->
     <main class="flex-1 flex flex-col items-center justify-center px-6 pb-12">
       <div class="w-full max-w-xl">
-
-        <!-- Hero 文案 -->
         <div class="text-center mb-10">
           <h1 class="text-4xl font-bold text-gray-900 mb-3 leading-tight">
             模拟真实面试<br />
             <span class="text-blue-600">提前找到差距</span>
           </h1>
           <p class="text-gray-500 text-sm leading-relaxed">
-            AI 扮演面试官，出题→追问→评分→反馈<br />
-            每场约 15 分钟，支持 4 类主流岗位
+            AI 扮演面试官，完成出题、追问、评分和反馈。
+            <br />
+            每场约 15 分钟，支持多类常见岗位。
           </p>
         </div>
 
-        <!-- 岗位选择 -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-3">
             <label class="text-sm font-medium text-gray-700">选择目标岗位</label>
             <span v-if="showJobError" class="text-xs text-red-500 animate-pulse">请先选择岗位</span>
           </div>
+
           <div class="grid grid-cols-2 gap-3">
             <button
               v-for="job in jobTypes"
@@ -56,10 +62,9 @@
                 'relative p-4 rounded-2xl border-2 text-left transition-all duration-150',
                 selectedJob === job.value
                   ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
-                  : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30'
+                  : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30',
               ]"
             >
-              <!-- 选中勾 -->
               <span
                 v-if="selectedJob === job.value"
                 class="absolute top-2.5 right-2.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
@@ -68,6 +73,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </span>
+
               <div class="text-2xl mb-2">{{ job.icon }}</div>
               <div class="font-semibold text-gray-900 text-sm">{{ job.label }}</div>
               <div class="text-xs text-gray-400 mt-0.5">{{ job.desc }}</div>
@@ -75,7 +81,6 @@
           </div>
         </div>
 
-        <!-- JD 输入 -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-medium text-gray-700">
@@ -84,15 +89,15 @@
             </label>
             <span class="text-xs text-gray-400">{{ jobDescription.length }} 字</span>
           </div>
+
           <textarea
             v-model="jobDescription"
             rows="5"
-            placeholder="将招聘 JD 粘贴到这里，AI 会根据 JD 出对应的专业题和情景题..."
+            placeholder="把招聘 JD 粘贴到这里，AI 会根据岗位要求生成更贴近真实场景的问题。"
             class="w-full px-4 py-3 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm text-gray-700 placeholder-gray-300 bg-white transition-shadow"
           />
         </div>
 
-        <!-- 开始按钮 -->
         <button
           @click="handleStart"
           class="w-full py-4 rounded-2xl font-semibold text-white transition-all duration-150 flex items-center justify-center gap-2"
@@ -106,7 +111,6 @@
           开始面试
         </button>
 
-        <!-- 流程说明 -->
         <div class="mt-8 grid grid-cols-3 gap-3">
           <div v-for="step in steps" :key="step.label" class="text-center">
             <div class="text-xl mb-1">{{ step.icon }}</div>
@@ -114,7 +118,6 @@
             <div class="text-[11px] text-gray-400 mt-0.5 leading-snug">{{ step.desc }}</div>
           </div>
         </div>
-
       </div>
     </main>
   </div>
@@ -130,23 +133,23 @@ const router = useRouter()
 const interviewStore = useInterviewStore()
 const notebookStore = useNotebookStore()
 
-const selectedJob = ref('')
-const jobDescription = ref('')
+const selectedJob = ref(interviewStore.jobType || '')
+const jobDescription = ref(interviewStore.jobDescription || '')
 const showJobError = ref(false)
 
 const notebookCount = computed(() => notebookStore.entries.length)
 
 const jobTypes = [
-  { value: '产品经理', label: '产品经理', icon: '🗂️', desc: 'Product Manager' },
+  { value: '产品经理', label: '产品经理', icon: '📋', desc: 'Product Manager' },
   { value: '技术研发', label: '技术研发', icon: '💻', desc: 'Software Engineer' },
-  { value: '销售', label: '销售', icon: '📈', desc: 'Sales & BD' },
-  { value: '职能', label: '职能', icon: '🏢', desc: 'Operations / HR' },
+  { value: '销售', label: '销售', icon: '🤝', desc: 'Sales & BD' },
+  { value: '职能', label: '职能', icon: '🧭', desc: 'Operations / HR' },
 ]
 
 const steps = [
-  { icon: '🎯', label: 'AI 出题', desc: '基于 JD 生成专项问题' },
-  { icon: '🔄', label: '深度追问', desc: '逻辑断点自动追问' },
-  { icon: '📊', label: '多维评分', desc: '五维雷达图+逐题点评' },
+  { icon: '🎯', label: 'AI 出题', desc: '根据岗位要求生成问题' },
+  { icon: '🔍', label: '深入追问', desc: '围绕细节继续深挖' },
+  { icon: '📊', label: '多维评分', desc: '生成报告和逐题点评' },
 ]
 
 function selectJob(value) {
@@ -159,6 +162,7 @@ function handleStart() {
     showJobError.value = true
     return
   }
+
   interviewStore.startInterview(selectedJob.value, jobDescription.value)
   router.push('/interview')
 }

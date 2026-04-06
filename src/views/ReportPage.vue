@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50 pb-16">
-
-    <!-- 顶部 -->
     <header class="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3 sticky top-0 z-10">
       <RouterLink to="/" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
         <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -14,7 +12,6 @@
       </div>
     </header>
 
-    <!-- 加载骨架 -->
     <div v-if="isLoading" class="max-w-xl mx-auto px-4 mt-6 space-y-4">
       <div class="bg-white rounded-3xl p-8 text-center animate-pulse">
         <div class="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4" />
@@ -32,16 +29,16 @@
       </div>
     </div>
 
-    <!-- 报告内容 -->
     <div v-else-if="report" class="max-w-xl mx-auto px-4 mt-6 space-y-4">
-
-      <!-- 总分卡片 -->
       <div class="bg-white rounded-3xl p-8 text-center shadow-sm">
         <div class="relative inline-flex items-center justify-center w-28 h-28 mb-4">
           <svg class="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="44" fill="none" stroke="#f3f4f6" stroke-width="8" />
             <circle
-              cx="50" cy="50" r="44" fill="none"
+              cx="50"
+              cy="50"
+              r="44"
+              fill="none"
               :stroke="ringColor"
               stroke-width="8"
               stroke-linecap="round"
@@ -55,11 +52,9 @@
         <p class="text-sm text-gray-400 mt-1">{{ scoreLabel }}</p>
       </div>
 
-      <!-- 雷达图 -->
       <div class="bg-white rounded-3xl p-6 shadow-sm">
         <h2 class="text-sm font-semibold text-gray-700 mb-1">五维能力评估</h2>
         <RadarChart :dimensions="report.dimensions" />
-        <!-- 维度分数列表 -->
         <div class="grid grid-cols-5 gap-1 mt-2">
           <div
             v-for="(item, key) in dimensionList"
@@ -72,7 +67,6 @@
         </div>
       </div>
 
-      <!-- 整体建议 -->
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-base">💡</span>
@@ -81,7 +75,6 @@
         <p class="text-sm text-blue-900 leading-relaxed">{{ report.overallSuggestion }}</p>
       </div>
 
-      <!-- 逐题点评 -->
       <div>
         <h2 class="text-sm font-semibold text-gray-700 px-1 mb-3">逐题点评</h2>
         <div class="space-y-3">
@@ -95,7 +88,6 @@
         </div>
       </div>
 
-      <!-- 操作按钮 -->
       <div class="flex gap-3 pt-2">
         <button
           @click="restart"
@@ -112,7 +104,6 @@
       </div>
     </div>
 
-    <!-- 报告获取失败 -->
     <div v-else class="max-w-xl mx-auto px-4 mt-16 text-center">
       <p class="text-4xl mb-4">😵</p>
       <p class="text-gray-600 font-medium mb-1">报告生成失败</p>
@@ -125,7 +116,6 @@
       </button>
     </div>
 
-    <!-- 保存成功 Toast -->
     <Transition name="toast">
       <div
         v-if="toastVisible"
@@ -158,47 +148,56 @@ const isLoading = ref(true)
 const errorMsg = ref('')
 const toastVisible = ref(false)
 
-// ── 总分动画 ──────────────────────────────────────────
 const displayScore = ref(0)
 const ringProgress = ref(0)
+const savedIndices = ref(new Set())
 
 function animateScore(target) {
   const duration = 900
   const start = Date.now()
+
   const tick = () => {
     const elapsed = Date.now() - start
     const progress = Math.min(elapsed / duration, 1)
-    const ease = 1 - Math.pow(1 - progress, 3)  // ease-out-cubic
+    const ease = 1 - Math.pow(1 - progress, 3)
+
     displayScore.value = Math.round(target * ease)
-    ringProgress.value = parseFloat((target / 100 * 276.46 * ease).toFixed(2))
-    if (progress < 1) requestAnimationFrame(tick)
+    ringProgress.value = parseFloat(((target / 100) * 276.46 * ease).toFixed(2))
+
+    if (progress < 1) {
+      requestAnimationFrame(tick)
+    }
   }
+
   requestAnimationFrame(tick)
 }
 
-watch(report, (val) => {
-  if (val?.totalScore != null) animateScore(val.totalScore)
+watch(report, (value) => {
+  if (value?.totalScore != null) {
+    animateScore(value.totalScore)
+  }
 })
 
-// ── 颜色计算 ──────────────────────────────────────────
 const ringColor = computed(() => {
-  const s = report.value?.totalScore ?? 0
-  if (s >= 80) return '#22c55e'
-  if (s >= 60) return '#f59e0b'
+  const score = report.value?.totalScore ?? 0
+  if (score >= 80) return '#22c55e'
+  if (score >= 60) return '#f59e0b'
   return '#ef4444'
 })
+
 const scoreTextColor = computed(() => {
-  const s = report.value?.totalScore ?? 0
-  if (s >= 80) return 'text-green-600'
-  if (s >= 60) return 'text-yellow-500'
+  const score = report.value?.totalScore ?? 0
+  if (score >= 80) return 'text-green-600'
+  if (score >= 60) return 'text-yellow-500'
   return 'text-red-500'
 })
+
 const scoreLabel = computed(() => {
-  const s = report.value?.totalScore ?? 0
-  if (s >= 90) return '优秀，表现亮眼 🎉'
-  if (s >= 80) return '良好，整体不错'
-  if (s >= 60) return '及格，还有提升空间'
-  return '需要继续努力 💪'
+  const score = report.value?.totalScore ?? 0
+  if (score >= 90) return '优秀，表现很亮眼'
+  if (score >= 80) return '良好，整体表现不错'
+  if (score >= 60) return '及格，仍有提升空间'
+  return '需要继续加强练习'
 })
 
 const DIMENSION_LABELS = {
@@ -206,14 +205,14 @@ const DIMENSION_LABELS = {
   completeness: '完整性',
   depth: '专业深度',
   expression: '表达力',
-  relevance: '匹配度',
+  relevance: '岗位匹配度',
 }
 
 const dimensionList = computed(() =>
   Object.entries(DIMENSION_LABELS).map(([key, label]) => ({
     label,
     score: report.value?.dimensions?.[key] ?? 0,
-  }))
+  })),
 )
 
 function dimColor(score) {
@@ -222,49 +221,60 @@ function dimColor(score) {
   return 'text-red-500'
 }
 
-// ── 获取报告 ──────────────────────────────────────────
 async function fetchReport() {
   isLoading.value = true
   errorMsg.value = ''
+
   try {
     const conversation = store.messages
-      .filter((m) => m.content.trim())
-      .map(({ role, content }) => ({ role, content }))
+      .filter((message) => typeof message.content === 'string' && message.content.trim().length > 0)
+      .map(({ role, content, questionIndex, isFollowUp }) => ({
+        role,
+        content,
+        questionIndex,
+        isFollowUp,
+      }))
+
+    if (conversation.length === 0) {
+      throw new Error('对话记录为空，无法生成报告。')
+    }
 
     const result = await evaluateInterview({
       jobType: store.jobType,
       jobDescription: store.jobDescription,
       conversation,
     })
+
     store.setReport(result)
     report.value = result
-  } catch (err) {
-    console.error(err)
-    errorMsg.value = err.message ?? '请检查网络或 API Key 配置'
+  } catch (error) {
+    console.error('[ReportPage] evaluate failed:', error)
+    errorMsg.value = error?.message ?? '请检查网络、接口配置或 API Key。'
   } finally {
     isLoading.value = false
   }
 }
 
 onMounted(() => {
-  if (store.status === 'idle') {
+  if (!store.jobType) {
     router.replace('/')
     return
   }
-  // 有缓存直接用
+
   if (store.report) {
     report.value = store.report
     isLoading.value = false
     return
   }
+
   fetchReport()
 })
 
-// ── 操作 ──────────────────────────────────────────────
-const savedIndices = ref(new Set())
-
 function saveToNotebook(review, idx) {
-  if (savedIndices.value.has(idx)) return
+  if (savedIndices.value.has(idx)) {
+    return
+  }
+
   notebookStore.addEntry({
     jobType: store.jobType,
     question: review.question,
@@ -273,13 +283,16 @@ function saveToNotebook(review, idx) {
     betterDirection: review.betterDirection,
     score: review.score,
   })
+
   savedIndices.value.add(idx)
   showToast()
 }
 
 function showToast() {
   toastVisible.value = true
-  setTimeout(() => { toastVisible.value = false }, 2200)
+  setTimeout(() => {
+    toastVisible.value = false
+  }, 2200)
 }
 
 function restart() {
