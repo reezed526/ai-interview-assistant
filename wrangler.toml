@@ -1,3 +1,7 @@
 name = "ai-interview-assistant"
-compatibility_date = "2026-04-06"
-pages_build_output_dir = "dist"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "interview-app-db"
+database_id = "3278f73c-61d2-48a0-8533-7e01ed5012a5"

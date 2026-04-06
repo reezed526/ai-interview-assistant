@@ -14,30 +14,45 @@
         <span class="font-bold text-gray-900 text-sm">AI 求职助手</span>
       </div>
 
-      <RouterLink
-        to="/notebook"
-        class="relative flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-          />
-        </svg>
-        错题本
-        <span
-          v-if="notebookCount > 0"
-          class="absolute -top-1.5 -right-2 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center leading-none"
-        >{{ notebookCount }}</span>
-      </RouterLink>
+      <div class="flex items-center gap-3">
+        <RouterLink
+          to="/notebook"
+          class="relative flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
+          错题本
+          <span
+            v-if="notebookCount > 0"
+            class="absolute -top-1.5 -right-2 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center leading-none"
+          >{{ notebookCount }}</span>
+        </RouterLink>
+
+        <div class="hidden sm:flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5">
+          <span class="text-xs text-gray-500">当前账号</span>
+          <span class="text-sm font-medium text-gray-800">{{ authStore.displayName }}</span>
+        </div>
+
+        <button
+          @click="handleLogout"
+          class="text-sm text-gray-500 hover:text-red-500 transition-colors"
+        >
+          退出
+        </button>
+      </div>
     </header>
 
     <main class="flex-1 flex flex-col items-center justify-center px-6 pb-12">
       <div class="w-full max-w-xl">
         <div class="text-center mb-10">
           <h1 class="text-4xl font-bold text-gray-900 mb-3 leading-tight">
-            模拟真实面试<br />
+            模拟真实面试
+            <br />
             <span class="text-blue-600">提前找到差距</span>
           </h1>
           <p class="text-gray-500 text-sm leading-relaxed">
@@ -124,12 +139,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
 import { useInterviewStore } from '@/stores/interview.js'
 import { useNotebookStore } from '@/stores/notebook.js'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const interviewStore = useInterviewStore()
 const notebookStore = useNotebookStore()
 
@@ -140,16 +157,16 @@ const showJobError = ref(false)
 const notebookCount = computed(() => notebookStore.entries.length)
 
 const jobTypes = [
-  { value: '产品经理', label: '产品经理', icon: '📋', desc: 'Product Manager' },
-  { value: '技术研发', label: '技术研发', icon: '💻', desc: 'Software Engineer' },
-  { value: '销售', label: '销售', icon: '🤝', desc: 'Sales & BD' },
-  { value: '职能', label: '职能', icon: '🧭', desc: 'Operations / HR' },
+  { value: '产品经理', label: '产品经理', icon: '产', desc: 'Product Manager' },
+  { value: '技术研发', label: '技术研发', icon: '码', desc: 'Software Engineer' },
+  { value: '销售', label: '销售', icon: '销', desc: 'Sales & BD' },
+  { value: '职能', label: '职能', icon: '职', desc: 'Operations / HR' },
 ]
 
 const steps = [
-  { icon: '🎯', label: 'AI 出题', desc: '根据岗位要求生成问题' },
-  { icon: '🔍', label: '深入追问', desc: '围绕细节继续深挖' },
-  { icon: '📊', label: '多维评分', desc: '生成报告和逐题点评' },
+  { icon: '题', label: 'AI 出题', desc: '根据岗位要求生成问题' },
+  { icon: '追', label: '深入追问', desc: '围绕细节继续深挖' },
+  { icon: '报', label: '多维评分', desc: '生成报告和逐题点评' },
 ]
 
 function selectJob(value) {
@@ -165,5 +182,12 @@ function handleStart() {
 
   interviewStore.startInterview(selectedJob.value, jobDescription.value)
   router.push('/interview')
+}
+
+async function handleLogout() {
+  interviewStore.reset()
+  await authStore.logout()
+  notebookStore.hydrate()
+  router.replace('/auth')
 }
 </script>

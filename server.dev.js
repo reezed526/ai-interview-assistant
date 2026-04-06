@@ -6,6 +6,10 @@
 import http from 'node:http'
 import chatHandler from './api/chat.js'
 import evaluateHandler from './api/evaluate.js'
+import authRegisterHandler from './api/auth/register.js'
+import authLoginHandler from './api/auth/login.js'
+import authMeHandler from './api/auth/me.js'
+import authLogoutHandler from './api/auth/logout.js'
 
 const PORT = 3001
 
@@ -23,8 +27,13 @@ function readBody(req) {
     })
 
     req.on('end', () => {
+      if (!raw) {
+        resolve({})
+        return
+      }
+
       try {
-        resolve(JSON.parse(raw || '{}'))
+        resolve(JSON.parse(raw))
       } catch {
         reject(new Error('Invalid JSON body'))
       }
@@ -80,7 +89,7 @@ function makeRes(res) {
 
 const server = http.createServer(async (req, nativeRes) => {
   nativeRes.setHeader('Access-Control-Allow-Origin', '*')
-  nativeRes.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  nativeRes.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   nativeRes.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
   if (req.method === 'OPTIONS') {
@@ -92,10 +101,14 @@ const server = http.createServer(async (req, nativeRes) => {
   const res = makeRes(nativeRes)
   const url = req.url?.split('?')[0]
 
-  try {
-    req.body = await readBody(req)
-  } catch (error) {
-    return res.status(400).json({ error: error.message })
+  if (req.method !== 'GET') {
+    try {
+      req.body = await readBody(req)
+    } catch (error) {
+      return res.status(400).json({ error: error.message })
+    }
+  } else {
+    req.body = {}
   }
 
   try {
@@ -106,6 +119,26 @@ const server = http.createServer(async (req, nativeRes) => {
 
     if (url === '/api/evaluate') {
       await evaluateHandler(req, res)
+      return
+    }
+
+    if (url === '/api/auth/register') {
+      await authRegisterHandler(req, res)
+      return
+    }
+
+    if (url === '/api/auth/login') {
+      await authLoginHandler(req, res)
+      return
+    }
+
+    if (url === '/api/auth/me') {
+      await authMeHandler(req, res)
+      return
+    }
+
+    if (url === '/api/auth/logout') {
+      await authLogoutHandler(req, res)
       return
     }
 
@@ -121,6 +154,10 @@ const server = http.createServer(async (req, nativeRes) => {
 
 server.listen(PORT, () => {
   console.log(`API Dev Server running at http://localhost:${PORT}`)
+  console.log('GET  /api/auth/me')
+  console.log('POST /api/auth/register')
+  console.log('POST /api/auth/login')
+  console.log('POST /api/auth/logout')
   console.log('POST /api/chat')
   console.log('POST /api/evaluate')
   console.log('Make sure .env.local has DEEPSEEK_API_KEY set.')

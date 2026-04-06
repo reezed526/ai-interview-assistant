@@ -1,10 +1,23 @@
 import { defineStore } from 'pinia'
+import { useAuthStore } from '@/stores/auth.js'
 
 const STORAGE_KEY = 'ai_interview_notebook'
 
+function loadAllEntries() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function saveAllEntries(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+}
+
 export const useNotebookStore = defineStore('notebook', {
   state: () => ({
-    entries: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'),
+    entries: [],
   }),
 
   getters: {
@@ -12,15 +25,21 @@ export const useNotebookStore = defineStore('notebook', {
 
     avgScore: (state) => {
       if (!state.entries.length) return 0
-      const sum = state.entries.reduce((acc, e) => acc + (e.score ?? 0), 0)
+      const sum = state.entries.reduce((acc, entry) => acc + (entry.score ?? 0), 0)
       return Math.round(sum / state.entries.length)
     },
 
-    /** 所有出现过的岗位类型（去重） */
-    jobTypes: (state) => [...new Set(state.entries.map((e) => e.jobType).filter(Boolean))],
+    jobTypes: (state) => [...new Set(state.entries.map((entry) => entry.jobType).filter(Boolean))],
   },
 
   actions: {
+    hydrate() {
+      const authStore = useAuthStore()
+      const userId = authStore.currentUser?.id
+      const allEntries = loadAllEntries()
+      this.entries = userId ? (allEntries[userId] ?? []) : []
+    },
+
     addEntry(entry) {
       this.entries.unshift({
         id: `entry_${Date.now()}`,
@@ -31,7 +50,7 @@ export const useNotebookStore = defineStore('notebook', {
     },
 
     removeEntry(id) {
-      this.entries = this.entries.filter((e) => e.id !== id)
+      this.entries = this.entries.filter((entry) => entry.id !== id)
       this._save()
     },
 
@@ -41,7 +60,13 @@ export const useNotebookStore = defineStore('notebook', {
     },
 
     _save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.entries))
+      const authStore = useAuthStore()
+      const userId = authStore.currentUser?.id
+      if (!userId) return
+
+      const allEntries = loadAllEntries()
+      allEntries[userId] = this.entries
+      saveAllEntries(allEntries)
     },
   },
 })
