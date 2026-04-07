@@ -1,5 +1,5 @@
 /**
- * 面试官 System Prompt 模板（与 api/chat.js 保持一致，前端保留参考版本）
+ * 面试官 System Prompt 模板（与 functions/api/chat.js 保持一致，前端保留参考版本）
  */
 export function buildInterviewerPrompt(jobType, jobDescription) {
   return `你是一位经验丰富的面试官，正在面试一位应聘「${jobType}」岗位的候选人。

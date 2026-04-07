@@ -1,17 +1,17 @@
 /**
  * Local API dev server.
- * It mimics the Vercel Serverless Functions runtime for local debugging.
+ * It serves the local adapter handlers used during development.
  */
 
 import http from 'node:http'
-import chatHandler from './api/chat.js'
-import evaluateHandler from './api/evaluate.js'
-import authRegisterHandler from './api/auth/register.js'
-import authLoginHandler from './api/auth/login.js'
-import authMeHandler from './api/auth/me.js'
-import authLogoutHandler from './api/auth/logout.js'
-import notebookIndexHandler from './api/notebook/index.js'
-import interviewStateHandler from './api/interview-state.js'
+import chatHandler from './dev-api/chat.js'
+import evaluateHandler from './dev-api/evaluate.js'
+import authRegisterHandler from './dev-api/auth/register.js'
+import authLoginHandler from './dev-api/auth/login.js'
+import authMeHandler from './dev-api/auth/me.js'
+import authLogoutHandler from './dev-api/auth/logout.js'
+import notebookIndexHandler from './dev-api/notebook/index.js'
+import interviewStateHandler from './dev-api/interview-state.js'
 
 const PORT = 3001
 
@@ -151,7 +151,7 @@ const server = http.createServer(async (req, nativeRes) => {
 
     if (url?.startsWith('/api/notebook/')) {
       req.query = { ...(req.query || {}), id: url.split('/').pop() }
-      const notebookItemHandler = (await import('./api/notebook/[id].js')).default
+      const notebookItemHandler = (await import('./dev-api/notebook/[id].js')).default
       await notebookItemHandler(req, res)
       return
     }

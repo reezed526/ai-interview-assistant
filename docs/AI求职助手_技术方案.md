@@ -29,7 +29,7 @@ AI求职助手是一款帮助应届生模拟面试的Web产品。用户选择目
 | 状态管理 | Pinia | 轻量，存面试状态 |
 | 本地存储 | localStorage | 错题本、历史记录 |
 | AI接口 | DeepSeek API (deepseek-chat / V3.2) | 兼容OpenAI格式，中文能力强，成本极低 |
-| 中间层 | Vercel Serverless Functions (Node.js) | API代理+Prompt组装 |
+| 中间层 | Cloudflare Pages Functions | API代理+Prompt组装 |
 | 部署 | 腾讯云 EdgeOne Pages / 阿里云等类似服务 | 国内访问速度快，支持自动构建部署 |
 | 图表 | Chart.js 或 ECharts | 雷达图评分展示 |
 
@@ -73,10 +73,9 @@ ai-interview-assistant/
 │   │   └── index.js
 │   ├── App.vue
 │   └── main.js
-├── api/                     # Vercel Serverless Functions
+├── dev-api/                 # 本地开发用 API 适配层
 │   ├── chat.js                  # 面试对话接口（流式）
 │   └── evaluate.js              # 面试评分接口
-├── vercel.json
 ├── package.json
 ├── tailwind.config.js
 ├── vite.config.js
@@ -174,7 +173,7 @@ ai-interview-assistant/
 
 **响应：** Server-Sent Events (SSE) 流式输出
 
-**后端逻辑 (api/chat.js)：**
+**后端逻辑 (functions/api/chat.js)：**
 ```javascript
 // 1. 接收前端参数
 // 2. 组装System Prompt（见第六节）
@@ -370,8 +369,8 @@ npm install openai   # DeepSeek兼容OpenAI SDK
 - AI"思考中"的加载动画
 
 ### Step 5：实现后端API（3-4小时）
-- api/chat.js：接收参数→组装Prompt→调DeepSeek API→流式返回
-- api/evaluate.js：接收完整对话→调DeepSeek API→返回评分JSON
+- functions/api/chat.js：接收参数→组装Prompt→调DeepSeek API→流式返回
+- functions/api/evaluate.js：接收完整对话→调DeepSeek API→返回评分JSON
 - 本地开发可以先用Vite的proxy或直接本地Node脚本测试
 - **注意**：DeepSeek API兼容OpenAI SDK，安装 `openai` 包即可，改一下baseURL
 
