@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 flex flex-col">
+  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 flex flex-col relative">
     <header class="flex items-center justify-between px-6 py-4">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -163,6 +163,12 @@
         </div>
       </div>
     </main>
+
+    <div class="fixed left-4 bottom-4 sm:left-6 sm:bottom-6 pointer-events-none">
+      <span class="rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm backdrop-blur">
+        Made by 李宥辰
+      </span>
+    </div>
   </div>
 </template>
 
