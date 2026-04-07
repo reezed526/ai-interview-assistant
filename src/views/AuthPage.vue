@@ -120,10 +120,12 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { useInterviewStore } from '@/stores/interview.js'
 import { useNotebookStore } from '@/stores/notebook.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const interviewStore = useInterviewStore()
 const notebookStore = useNotebookStore()
 
 const tabs = [
@@ -192,7 +194,10 @@ async function handleSubmit() {
       })
     }
 
-    notebookStore.hydrate()
+    await Promise.all([
+      interviewStore.hydrate(),
+      notebookStore.hydrate(),
+    ])
     router.replace('/')
   } catch (error) {
     errorMessage.value = error?.message || '操作失败，请稍后重试'

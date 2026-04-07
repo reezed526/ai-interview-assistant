@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router/index.js'
 import './assets/main.css'
 import { useAuthStore } from '@/stores/auth.js'
+import { useInterviewStore } from '@/stores/interview.js'
 import { useNotebookStore } from '@/stores/notebook.js'
 
 async function bootstrap() {
@@ -15,8 +16,14 @@ async function bootstrap() {
   const authStore = useAuthStore(pinia)
   await authStore.restoreSession()
 
-  const notebookStore = useNotebookStore(pinia)
-  notebookStore.hydrate()
+  if (authStore.isAuthenticated) {
+    const interviewStore = useInterviewStore(pinia)
+    const notebookStore = useNotebookStore(pinia)
+    await Promise.all([
+      interviewStore.hydrate(),
+      notebookStore.hydrate(),
+    ])
+  }
 
   app.use(router)
 

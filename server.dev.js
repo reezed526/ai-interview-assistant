@@ -10,6 +10,8 @@ import authRegisterHandler from './api/auth/register.js'
 import authLoginHandler from './api/auth/login.js'
 import authMeHandler from './api/auth/me.js'
 import authLogoutHandler from './api/auth/logout.js'
+import notebookIndexHandler from './api/notebook/index.js'
+import interviewStateHandler from './api/interview-state.js'
 
 const PORT = 3001
 
@@ -142,6 +144,23 @@ const server = http.createServer(async (req, nativeRes) => {
       return
     }
 
+    if (url === '/api/notebook') {
+      await notebookIndexHandler(req, res)
+      return
+    }
+
+    if (url?.startsWith('/api/notebook/')) {
+      req.query = { ...(req.query || {}), id: url.split('/').pop() }
+      const notebookItemHandler = (await import('./api/notebook/[id].js')).default
+      await notebookItemHandler(req, res)
+      return
+    }
+
+    if (url === '/api/interview-state') {
+      await interviewStateHandler(req, res)
+      return
+    }
+
     return res.status(404).json({ error: `Unknown route: ${url}` })
   } catch (error) {
     console.error('[server.dev] Unhandled error:', error)
@@ -158,6 +177,9 @@ server.listen(PORT, () => {
   console.log('POST /api/auth/register')
   console.log('POST /api/auth/login')
   console.log('POST /api/auth/logout')
+  console.log('GET/POST/DELETE /api/notebook')
+  console.log('DELETE /api/notebook/:id')
+  console.log('GET/PUT/DELETE /api/interview-state')
   console.log('POST /api/chat')
   console.log('POST /api/evaluate')
   console.log('Make sure .env.local has DEEPSEEK_API_KEY set.')

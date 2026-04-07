@@ -1,23 +1,15 @@
 import { defineStore } from 'pinia'
-import { useAuthStore } from '@/stores/auth.js'
-
-const STORAGE_KEY = 'ai_interview_notebook'
-
-function loadAllEntries() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
-  } catch {
-    return {}
-  }
-}
-
-function saveAllEntries(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
+import {
+  clearNotebookEntries,
+  createNotebookEntry,
+  deleteNotebookEntry,
+  fetchNotebookEntries,
+} from '@/services/user-data.js'
 
 export const useNotebookStore = defineStore('notebook', {
   state: () => ({
     entries: [],
+    loading: false,
   }),
 
   getters: {
@@ -33,40 +25,37 @@ export const useNotebookStore = defineStore('notebook', {
   },
 
   actions: {
-    hydrate() {
-      const authStore = useAuthStore()
-      const userId = authStore.currentUser?.id
-      const allEntries = loadAllEntries()
-      this.entries = userId ? (allEntries[userId] ?? []) : []
+    async hydrate() {
+      this.loading = true
+      try {
+        const { entries = [] } = await fetchNotebookEntries()
+        this.entries = entries
+      } catch {
+        this.entries = []
+      } finally {
+        this.loading = false
+      }
     },
 
-    addEntry(entry) {
-      this.entries.unshift({
-        id: `entry_${Date.now()}`,
-        date: new Date().toISOString(),
-        ...entry,
-      })
-      this._save()
+    async addEntry(entry) {
+      const { entry: savedEntry } = await createNotebookEntry(entry)
+      this.entries.unshift(savedEntry)
+      return savedEntry
     },
 
-    removeEntry(id) {
+    async removeEntry(id) {
+      await deleteNotebookEntry(id)
       this.entries = this.entries.filter((entry) => entry.id !== id)
-      this._save()
     },
 
-    clearAll() {
+    async clearAll() {
+      await clearNotebookEntries()
       this.entries = []
-      this._save()
     },
 
-    _save() {
-      const authStore = useAuthStore()
-      const userId = authStore.currentUser?.id
-      if (!userId) return
-
-      const allEntries = loadAllEntries()
-      allEntries[userId] = this.entries
-      saveAllEntries(allEntries)
+    clearLocalState() {
+      this.entries = []
+      this.loading = false
     },
   },
 })

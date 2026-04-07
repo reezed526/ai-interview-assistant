@@ -222,16 +222,16 @@ function toggleEntry(id) {
   expandedIds.value = next
 }
 
-function removeEntry(id) {
+async function removeEntry(id) {
   const next = new Set(expandedIds.value)
   next.delete(id)
   expandedIds.value = next
-  store.removeEntry(id)
+  await store.removeEntry(id)
 }
 
-function handleClearAll() {
+async function handleClearAll() {
   expandedIds.value = new Set()
-  store.clearAll()
+  await store.clearAll()
   showClearConfirm.value = false
 }
 

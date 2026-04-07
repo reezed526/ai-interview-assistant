@@ -185,9 +185,9 @@ function handleStart() {
 }
 
 async function handleLogout() {
-  interviewStore.reset()
+  await interviewStore.reset()
   await authStore.logout()
-  notebookStore.hydrate()
+  notebookStore.clearLocalState()
   router.replace('/auth')
 }
 </script>

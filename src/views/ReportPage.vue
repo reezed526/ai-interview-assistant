@@ -270,12 +270,12 @@ onMounted(() => {
   fetchReport()
 })
 
-function saveToNotebook(review, idx) {
+async function saveToNotebook(review, idx) {
   if (savedIndices.value.has(idx)) {
     return
   }
 
-  notebookStore.addEntry({
+  await notebookStore.addEntry({
     jobType: store.jobType,
     question: review.question,
     userAnswer: review.userAnswer,
@@ -296,7 +296,7 @@ function showToast() {
 }
 
 function restart() {
-  store.reset()
+  void store.reset()
   router.push('/')
 }
 </script>

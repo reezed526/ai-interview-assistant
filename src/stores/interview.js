@@ -1,52 +1,41 @@
 import { defineStore } from 'pinia'
+import { clearInterviewState, fetchInterviewState, saveInterviewState } from '@/services/user-data.js'
 
-const SESSION_KEY = 'ai_interview_session'
-
-function loadSession() {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
+function getDefaultState() {
+  return {
+    jobType: '',
+    jobDescription: '',
+    messages: [],
+    questionCount: 0,
+    totalQuestionCount: 6,
+    followUpCount: 0,
+    status: 'idle',
+    report: null,
   }
 }
 
-function saveSession(state) {
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-      jobType:       state.jobType,
-      jobDescription: state.jobDescription,
-      messages:      state.messages,
-      questionCount: state.questionCount,
-      totalQuestionCount: state.totalQuestionCount,
-      followUpCount: state.followUpCount,
-      status:        state.status,
-      report:        state.report,
-    }))
-  } catch { /* sessionStorage 不可用时静默失败 */ }
+function serializeState(state) {
+  return {
+    jobType: state.jobType,
+    jobDescription: state.jobDescription,
+    messages: state.messages,
+    questionCount: state.questionCount,
+    totalQuestionCount: state.totalQuestionCount,
+    followUpCount: state.followUpCount,
+    status: state.status,
+    report: state.report,
+  }
 }
-
-function clearSession() {
-  try { sessionStorage.removeItem(SESSION_KEY) } catch { /* ignore */ }
-}
-
-const saved = loadSession()
 
 export const useInterviewStore = defineStore('interview', {
   state: () => ({
-    jobType:        saved?.jobType        ?? '',
-    jobDescription: saved?.jobDescription ?? '',
-    messages:       saved?.messages       ?? [],
-    questionCount:  saved?.questionCount  ?? 0,
-    totalQuestionCount: saved?.totalQuestionCount ?? 6,
-    followUpCount:  saved?.followUpCount  ?? 0,
-    status:         saved?.status         ?? 'idle',
-    report:         saved?.report         ?? null,
+    ...getDefaultState(),
+    loading: false,
   }),
 
   getters: {
     lastMessage: (state) => state.messages[state.messages.length - 1] ?? null,
-    roundCount:  (state) => state.messages.filter((m) => m.role === 'user').length,
+    roundCount: (state) => state.messages.filter((message) => message.role === 'user').length,
     currentQuestionIndex: (state) => {
       const assistantMessages = state.messages.filter((message) => message.role === 'assistant')
       return assistantMessages[assistantMessages.length - 1]?.questionIndex ?? Math.max(state.questionCount, 1)
@@ -54,16 +43,37 @@ export const useInterviewStore = defineStore('interview', {
   },
 
   actions: {
+    async hydrate() {
+      this.loading = true
+      try {
+        const { state } = await fetchInterviewState()
+        this.$patch({
+          ...getDefaultState(),
+          ...(state || {}),
+          loading: false,
+        })
+      } catch {
+        this.$patch({
+          ...getDefaultState(),
+          loading: false,
+        })
+      }
+    },
+
+    async persist() {
+      await saveInterviewState(serializeState(this.$state))
+    },
+
     startInterview(jobType, jobDescription) {
-      this.jobType        = jobType
+      this.jobType = jobType
       this.jobDescription = jobDescription
-      this.messages       = []
-      this.questionCount  = 0
+      this.messages = []
+      this.questionCount = 0
       this.totalQuestionCount = 6
-      this.followUpCount  = 0
-      this.status         = 'in-progress'
-      this.report         = null
-      saveSession(this.$state)
+      this.followUpCount = 0
+      this.status = 'in-progress'
+      this.report = null
+      void this.persist()
     },
 
     addMessage(message) {
@@ -76,7 +86,7 @@ export const useInterviewStore = defineStore('interview', {
         isFollowUp: false,
         ...message,
       })
-      saveSession(this.$state)
+      void this.persist()
       return id
     },
 
@@ -84,15 +94,14 @@ export const useInterviewStore = defineStore('interview', {
       const last = this.messages[this.messages.length - 1]
       if (last) {
         last.content += chunk
-        // 流式输出期间不频繁写 sessionStorage，避免性能问题
       }
     },
 
     setStreamingDone(id) {
-      const msg = this.messages.find((m) => m.id === id)
+      const msg = this.messages.find((item) => item.id === id)
       if (msg) {
         msg.isStreaming = false
-        saveSession(this.$state)   // 流结束后才持久化
+        void this.persist()
       }
     },
 
@@ -107,37 +116,38 @@ export const useInterviewStore = defineStore('interview', {
       }
 
       if (isFollowUp) {
-        this.followUpCount++
+        this.followUpCount += 1
       } else {
         this.questionCount = questionIndex
         this.followUpCount = 0
       }
 
-      saveSession(this.$state)
+      void this.persist()
     },
 
     finishInterview() {
       this.status = 'finished'
-      saveSession(this.$state)
+      void this.persist()
     },
 
     setReport(report) {
       this.report = report
-      saveSession(this.$state)
+      void this.persist()
     },
 
-    reset() {
+    async reset() {
       this.$patch({
-        jobType:        '',
-        jobDescription: '',
-        messages:       [],
-        questionCount:  0,
-        totalQuestionCount: 6,
-        followUpCount:  0,
-        status:         'idle',
-        report:         null,
+        ...getDefaultState(),
+        loading: false,
       })
-      clearSession()
+      await clearInterviewState()
+    },
+
+    clearLocalState() {
+      this.$patch({
+        ...getDefaultState(),
+        loading: false,
+      })
     },
   },
 })

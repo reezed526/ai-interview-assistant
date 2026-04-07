@@ -1,101 +1,85 @@
-# Cloudflare 共享注册登录配置
+# Cloudflare 云同步数据配置
 
-这份配置用于让你的 Cloudflare Pages 站点支持“所有用户共享注册和登录”。
+这份配置用于让你的 Cloudflare Pages 站点支持云端共享账号，并把错题本、面试过程状态、报告一起同步到 D1。
 
-## 1. 创建 D1 数据库
+## 1. 确认 D1 数据库
 
-进入 Cloudflare 控制台：
+如果你已经创建过 D1，可以直接继续使用原来的数据库。
 
-1. 打开 `Workers & Pages`
-2. 进入 `D1 SQL Database`
+如果还没有：
+
+1. 进入 `Workers & Pages`
+2. 打开 `D1 SQL Database`
 3. 点击 `Create`
-4. 新建一个数据库，例如：`ai-interview-auth`
+4. 新建数据库，例如：`ai-interview-auth`
 
-创建完成后，记下数据库名称。
+## 2. 执行最新表结构 SQL
 
-## 2. 初始化用户表
+打开 D1 数据库的 `Console`，执行 [database/auth-schema.sql](c:\Users\45274\Desktop\ai-interview-assistant\database\auth-schema.sql) 全部内容。
 
-打开刚创建的 D1 数据库，进入 `Console` 或 `Query` 页面，执行 [database/auth-schema.sql](c:\Users\45274\Desktop\ai-interview-assistant\database\auth-schema.sql) 里的 SQL：
+这次 SQL 不只是用户表，还包括：
 
-```sql
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  password_salt TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
+- `users`
+- `notebook_entries`
+- `interview_states`
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
-```
+如果你之前已经建过 `users` 表，也可以重复执行这份 SQL，`IF NOT EXISTS` 不会破坏已有表。
 
-## 3. 给 Pages 项目绑定 D1
+## 3. 检查 Pages 绑定
 
-进入你的 Pages 项目：
+进入 Pages 项目：
 
 1. 打开 `Settings`
 2. 进入 `Bindings`
-3. 选择 `Add binding`
-4. 类型选 `D1 database`
-5. Variable name 填：`DB`
-6. 选择你刚创建的数据库
+3. 确认已经有一个 D1 binding
+4. Variable name 必须是：`DB`
 
-这个名字必须是 `DB`，因为代码里认证接口就是从 `context.env.DB` 读取数据库。
-
-## 4. 配置环境变量
+## 4. 检查环境变量
 
 进入 Pages 项目：
 
 1. 打开 `Settings`
 2. 进入 `Environment variables`
-3. 分别在 `Production` 和 `Preview` 添加：
+
+确认以下变量已经在 `Production` 和 `Preview` 中配置：
 
 - `DEEPSEEK_API_KEY`
 - `AUTH_SECRET`
 
-其中：
-
-- `DEEPSEEK_API_KEY`：你现有的 DeepSeek key
-- `AUTH_SECRET`：一段你自己生成的长随机字符串，建议至少 32 位
-
-示例：
-
-```text
-AUTH_SECRET=8f7c3f0f1a934c1f8c9e25bd7e9a4f62
-```
-
-`AUTH_SECRET` 用于签名登录 Cookie。改掉它会导致所有已登录用户失效，这是正常现象。
-
 ## 5. 重新部署
 
-代码推送后重新部署：
+推送最新代码后重新部署：
 
 ```powershell
 git add .
-git commit -m "add cloudflare shared auth"
+git commit -m "sync user data to d1"
 git push
 ```
 
-Cloudflare 会自动重新构建。
+## 6. 这次会上云的数据
 
-## 6. 上线后验证
+现在会同步到云端的内容：
 
-部署完成后，至少验证：
-
-1. 在浏览器 A 注册一个新账号
-2. 退出登录
-3. 在浏览器 B 或无痕窗口用同一账号登录
-4. 确认可以成功登录
-5. 再尝试注册同一邮箱，应该提示已注册
-
-## 7. 当前范围说明
-
-这次改造已经让“注册和登录”变成云端共享账号。
-
-当前仍然保存在浏览器本地的数据：
-
+- 用户账号
+- 登录状态
 - 错题本
-- 面试中的临时会话状态
+- 当前面试过程状态
+- 当前面试报告
 
-如果你下一步还要“用户换设备后也能看到自己的错题本和历史记录”，那就需要继续把这些数据也迁移到 D1。
+这意味着：
+
+- 用户换浏览器或换设备后，登录同一账号仍能看到自己的错题本
+- 如果用户中途退出，再次登录后还能恢复当前面试状态和报告
+
+## 7. 部署后验证
+
+建议按下面顺序验证：
+
+1. 用户 A 在设备 1 注册并登录
+2. 保存几条错题本
+3. 开始一场面试，做到一半关闭页面
+4. 在设备 2 登录同一账号
+5. 检查错题本是否同步
+6. 检查面试状态是否恢复
+7. 完成面试并进入报告页
+8. 再换设备登录，检查报告是否还在
