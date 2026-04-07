@@ -23,10 +23,14 @@ export async function sendChatMessage({
   })
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
+    const err = await response.json().catch(async () => {
+      const text = await response.text().catch(() => '')
+      return { error: text || `HTTP ${response.status}` }
+    })
     const error = new Error(err.error ?? `API error: ${response.status}`)
     error.code = err.code
     error.usage = err.usage
+    error.detail = err.detail
     throw error
   }
 
