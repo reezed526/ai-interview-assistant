@@ -1,5 +1,22 @@
 export const AUTH_COOKIE_NAME = 'ai_auth_session'
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
+export const FREE_PLAN_CODE = 'free'
+export const PRO_PLAN_CODE = 'pro'
+export const FREE_INTERVIEW_QUOTA = 3
+export const UNLIMITED_INTERVIEW_QUOTA = -1
+
+export const SUBSCRIPTION_PLANS = {
+  [FREE_PLAN_CODE]: {
+    code: FREE_PLAN_CODE,
+    label: '免费计划',
+    interviewQuota: FREE_INTERVIEW_QUOTA,
+  },
+  [PRO_PLAN_CODE]: {
+    code: PRO_PLAN_CODE,
+    label: '订阅计划',
+    interviewQuota: UNLIMITED_INTERVIEW_QUOTA,
+  },
+}
 
 const encoder = new TextEncoder()
 
@@ -7,11 +24,6 @@ function bytesToHex(bytes) {
   return Array.from(bytes)
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('')
-}
-
-async function sha256Bytes(input) {
-  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(input))
-  return new Uint8Array(digest)
 }
 
 async function hmacSha256Bytes(secret, input) {
@@ -90,6 +102,10 @@ export function normalizeEmail(email) {
   return email.trim().toLowerCase()
 }
 
+export function getPlanDefinition(planCode = FREE_PLAN_CODE) {
+  return SUBSCRIPTION_PLANS[planCode] ?? SUBSCRIPTION_PLANS[FREE_PLAN_CODE]
+}
+
 export function validateRegistrationInput({ name, email, password }) {
   if (!name?.trim()) return '请输入昵称'
   if (!email?.trim()) return '请输入邮箱'
@@ -112,6 +128,11 @@ export function createUserId() {
 export function createPasswordSalt() {
   const bytes = crypto.getRandomValues(new Uint8Array(16))
   return bytesToHex(bytes)
+}
+
+export function createInterviewId() {
+  const bytes = crypto.getRandomValues(new Uint8Array(12))
+  return `interview_${bytesToHex(bytes)}`
 }
 
 export async function hashPassword(password, salt) {
@@ -170,14 +191,32 @@ export async function verifySessionToken(token, secret) {
   }
 }
 
+export function getRemainingInterviews(user) {
+  const fallbackQuota = getPlanDefinition(user?.subscription_plan ?? user?.subscriptionPlan).interviewQuota
+  const quota = Number(user?.interview_quota ?? user?.interviewQuota ?? fallbackQuota)
+  const used = Number(user?.interview_used ?? user?.interviewUsed ?? 0)
+  if (quota < 0) return -1
+  return Math.max(quota - used, 0)
+}
+
 export function sanitizeUser(user) {
   if (!user) return null
+
+  const subscriptionPlan = user.subscription_plan ?? user.subscriptionPlan ?? FREE_PLAN_CODE
+  const planDefinition = getPlanDefinition(subscriptionPlan)
+  const interviewQuota = Number(user.interview_quota ?? user.interviewQuota ?? planDefinition.interviewQuota)
+  const interviewUsed = Number(user.interview_used ?? user.interviewUsed ?? 0)
 
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     createdAt: user.created_at ?? user.createdAt ?? null,
+    subscriptionPlan,
+    subscriptionLabel: planDefinition.label,
+    interviewQuota,
+    interviewUsed,
+    interviewRemaining: interviewQuota < 0 ? -1 : Math.max(interviewQuota - interviewUsed, 0),
   }
 }
 

@@ -4,6 +4,8 @@ import {
   classifyNextAction,
   createDeepSeekClient,
 } from '../_lib/chat.js'
+import { ensureInterviewQuota, requireAuthenticatedUser } from '../_lib/auth.js'
+import { sanitizeUser } from '../../shared/auth.js'
 
 export async function onRequestPost(context) {
   const apiKey = context.env.DEEPSEEK_API_KEY
@@ -25,6 +27,7 @@ export async function onRequestPost(context) {
     questionCount = 0,
     totalQuestionCount,
     followUpCount = 0,
+    interviewId,
   } = body ?? {}
 
   if (!jobType) {
@@ -33,6 +36,24 @@ export async function onRequestPost(context) {
 
   if (!Array.isArray(messages)) {
     return Response.json({ error: 'messages must be an array' }, { status: 400 })
+  }
+
+  let usage = null
+  if (messages.length === 0 && questionCount === 0) {
+    const quotaCheck = await ensureInterviewQuota(context, interviewId)
+    if (quotaCheck.error) return quotaCheck.error
+    usage = quotaCheck.usage
+  } else {
+    const auth = await requireAuthenticatedUser(context)
+    if (auth.error) return auth.error
+    const sanitized = sanitizeUser(auth.user)
+    usage = sanitized ? {
+      subscriptionPlan: sanitized.subscriptionPlan,
+      subscriptionLabel: sanitized.subscriptionLabel,
+      interviewQuota: sanitized.interviewQuota,
+      interviewUsed: sanitized.interviewUsed,
+      interviewRemaining: sanitized.interviewRemaining,
+    } : null
   }
 
   const client = createDeepSeekClient(apiKey)
@@ -63,6 +84,7 @@ export async function onRequestPost(context) {
             action,
             questionIndex,
             totalQuestionCount: resolvedTotalQuestionCount,
+            usage,
           },
         }))
 

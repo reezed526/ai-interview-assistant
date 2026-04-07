@@ -96,12 +96,14 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
 import { useInterviewStore } from '@/stores/interview.js'
 import { sendChatMessage } from '@/services/api.js'
 import ChatBubble from '@/components/ChatBubble.vue'
 import ChatInput from '@/components/ChatInput.vue'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const store = useInterviewStore()
 
 const listRef = ref(null)
@@ -162,12 +164,16 @@ async function requestAI() {
       questionCount: store.questionCount,
       totalQuestionCount: store.totalQuestionCount,
       followUpCount: store.followUpCount,
+      interviewId: store.interviewId,
       onChunk(chunk) {
         store.appendToLastMessage(chunk)
         bottomRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' })
       },
     })
   } catch (error) {
+    if (error.usage) {
+      authStore.applyUsage(error.usage)
+    }
     store.messages.pop()
     hasError.value = true
     console.error('[InterviewRoom] chat request failed:', error)
@@ -197,6 +203,9 @@ function checkInterviewEnd() {
 }
 
 function finalizeAssistantTurn(msgId, meta, stateBeforeRequest) {
+  if (meta?.usage) {
+    authStore.applyUsage(meta.usage)
+  }
   const isFollowUp = meta?.action === 'follow_up'
   const questionIndex = meta?.questionIndex
     ?? (isFollowUp ? Math.max(stateBeforeRequest.questionCount, 1) : stateBeforeRequest.questionCount + 1)

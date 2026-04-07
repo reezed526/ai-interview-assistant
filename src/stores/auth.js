@@ -15,6 +15,13 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => Boolean(state.currentUser?.id),
     displayName: (state) => state.currentUser?.name || state.currentUser?.email || '',
+    subscriptionPlan: (state) => state.currentUser?.subscriptionPlan || 'free',
+    subscriptionLabel: (state) => state.currentUser?.subscriptionLabel || '免费计划',
+    interviewRemaining: (state) => state.currentUser?.interviewRemaining ?? 0,
+    hasUnlimitedInterviews: (state) => state.currentUser?.interviewRemaining === -1,
+    canStartInterview() {
+      return this.hasUnlimitedInterviews || this.interviewRemaining > 0
+    },
   },
 
   actions: {
@@ -49,6 +56,18 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.currentUser = null
         this.initialized = true
+      }
+    },
+
+    applyUsage(usage) {
+      if (!this.currentUser || !usage) return
+      this.currentUser = {
+        ...this.currentUser,
+        subscriptionPlan: usage.subscriptionPlan ?? this.currentUser.subscriptionPlan,
+        subscriptionLabel: usage.subscriptionLabel ?? this.currentUser.subscriptionLabel,
+        interviewQuota: usage.interviewQuota ?? this.currentUser.interviewQuota,
+        interviewUsed: usage.interviewUsed ?? this.currentUser.interviewUsed,
+        interviewRemaining: usage.interviewRemaining ?? this.currentUser.interviewRemaining,
       }
     },
   },

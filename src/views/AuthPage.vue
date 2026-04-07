@@ -111,6 +111,10 @@
             {{ mode === 'register' ? '去登录' : '去注册' }}
           </button>
         </p>
+
+        <p class="mt-4 rounded-2xl bg-blue-50 px-4 py-3 text-xs leading-6 text-blue-700">
+          新账号默认开通免费计划，当前可进行 3 次面试模拟。订阅计划后续会接在这个账号体系上。
+        </p>
       </section>
     </div>
   </div>

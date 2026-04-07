@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia'
 import { clearInterviewState, fetchInterviewState, saveInterviewState } from '@/services/user-data.js'
 
+function createInterviewId() {
+  return `interview_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+}
+
 function getDefaultState() {
   return {
+    interviewId: '',
     jobType: '',
     jobDescription: '',
     messages: [],
@@ -16,6 +21,7 @@ function getDefaultState() {
 
 function serializeState(state) {
   return {
+    interviewId: state.interviewId,
     jobType: state.jobType,
     jobDescription: state.jobDescription,
     messages: state.messages,
@@ -65,6 +71,7 @@ export const useInterviewStore = defineStore('interview', {
     },
 
     startInterview(jobType, jobDescription) {
+      this.interviewId = createInterviewId()
       this.jobType = jobType
       this.jobDescription = jobDescription
       this.messages = []

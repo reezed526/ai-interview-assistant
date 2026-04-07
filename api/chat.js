@@ -4,6 +4,8 @@ import {
   classifyNextAction,
   createDeepSeekClient,
 } from '../functions/_lib/chat.js'
+import { ensureInterviewQuota, requireAuthenticatedUser } from './_lib/local-auth.js'
+import { sanitizeUser } from '../shared/auth.js'
 
 if (!process.env.DEEPSEEK_API_KEY) {
   console.error('[api/chat] DEEPSEEK_API_KEY is missing. Check .env.local.')
@@ -23,6 +25,7 @@ export default async function handler(req, res) {
     questionCount = 0,
     totalQuestionCount,
     followUpCount = 0,
+    interviewId,
   } = req.body ?? {}
 
   if (!jobType) {
@@ -31,6 +34,17 @@ export default async function handler(req, res) {
 
   if (!Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages must be an array' })
+  }
+
+  let usage = null
+  if (messages.length === 0 && questionCount === 0) {
+    const quotaCheck = await ensureInterviewQuota(req, res, interviewId)
+    if (!quotaCheck) return
+    usage = quotaCheck.usage
+  } else {
+    const auth = await requireAuthenticatedUser(req, res)
+    if (!auth) return
+    usage = sanitizeUsage(auth.user)
   }
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
@@ -61,6 +75,7 @@ export default async function handler(req, res) {
         action,
         questionIndex,
         totalQuestionCount: resolvedTotalQuestionCount,
+        usage,
       },
     }))
 
@@ -98,4 +113,15 @@ export default async function handler(req, res) {
     write(JSON.stringify({ error: error.message }))
     res.end()
   }
+}
+
+function sanitizeUsage(user) {
+  const sanitized = sanitizeUser(user)
+  return sanitized ? {
+    subscriptionPlan: sanitized.subscriptionPlan,
+    subscriptionLabel: sanitized.subscriptionLabel,
+    interviewQuota: sanitized.interviewQuota,
+    interviewUsed: sanitized.interviewUsed,
+    interviewRemaining: sanitized.interviewRemaining,
+  } : null
 }

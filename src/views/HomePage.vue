@@ -62,6 +62,36 @@
           </p>
         </div>
 
+        <div class="mb-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm font-semibold text-blue-900">
+                {{ authStore.subscriptionLabel }}
+              </p>
+              <p class="text-xs text-blue-700 mt-1">
+                <template v-if="authStore.hasUnlimitedInterviews">
+                  当前套餐可无限次进行面试模拟
+                </template>
+                <template v-else>
+                  剩余面试次数：{{ authStore.interviewRemaining }} / {{ authStore.currentUser?.interviewQuota ?? 3 }}
+                </template>
+              </p>
+            </div>
+            <span
+              class="shrink-0 rounded-full px-3 py-1 text-xs font-medium"
+              :class="authStore.canStartInterview ? 'bg-white text-blue-700' : 'bg-red-100 text-red-600'"
+            >
+              {{ authStore.canStartInterview ? '可开始' : '已用完' }}
+            </span>
+          </div>
+          <p v-if="!authStore.canStartInterview" class="text-xs text-red-500 mt-3">
+            免费版目前最多支持 3 次面试模拟。订阅计划即将上线。
+          </p>
+          <p v-else-if="authStore.subscriptionPlan === 'free'" class="text-xs text-blue-600 mt-3">
+            新账号默认开通免费计划，后续可在这里升级订阅。
+          </p>
+        </div>
+
         <div class="mb-6">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-medium text-gray-700">目标岗位</label>
@@ -114,7 +144,7 @@
         <button
           @click="handleStart"
           class="w-full py-4 rounded-2xl font-semibold text-white transition-all duration-150 flex items-center justify-center gap-2"
-          :class="selectedJob
+          :class="selectedJob && authStore.canStartInterview
             ? 'bg-blue-600 hover:bg-blue-700 active:scale-[0.99] shadow-lg shadow-blue-200'
             : 'bg-gray-300 cursor-not-allowed'"
         >
@@ -179,6 +209,10 @@ function selectJob(value) {
 function handleStart() {
   if (!selectedJob.value.trim()) {
     showJobError.value = true
+    return
+  }
+
+  if (!authStore.canStartInterview) {
     return
   }
 
