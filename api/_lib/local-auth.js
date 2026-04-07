@@ -10,6 +10,7 @@ import {
   createSessionToken,
   createUserId,
   fingerprintPassword,
+  hasUnlimitedInterviewAccess,
   normalizeEmail,
   parseCookieHeader,
   sanitizeUser,
@@ -107,6 +108,13 @@ export async function ensureInterviewQuota(req, res, interviewId) {
   const existingAttempt = attempts.find((item) => item.id === interviewId && item.user_id === auth.user.id)
 
   if (!existingAttempt) {
+    if (hasUnlimitedInterviewAccess(auth.user)) {
+      return {
+        user: auth.user,
+        usage: sanitizeUser(auth.user),
+      }
+    }
+
     const quota = Number(auth.user.interview_quota ?? FREE_INTERVIEW_QUOTA)
     const used = Number(auth.user.interview_used ?? 0)
     const remaining = quota < 0 ? -1 : quota - used

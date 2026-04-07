@@ -4,6 +4,10 @@ export const FREE_PLAN_CODE = 'free'
 export const PRO_PLAN_CODE = 'pro'
 export const FREE_INTERVIEW_QUOTA = 3
 export const UNLIMITED_INTERVIEW_QUOTA = -1
+export const ADMIN_UNLIMITED_IDENTIFIERS = {
+  names: ['lzj121218'],
+  emails: ['452740468@qq.com'],
+}
 
 export const SUBSCRIPTION_PLANS = {
   [FREE_PLAN_CODE]: {
@@ -106,6 +110,21 @@ export function getPlanDefinition(planCode = FREE_PLAN_CODE) {
   return SUBSCRIPTION_PLANS[planCode] ?? SUBSCRIPTION_PLANS[FREE_PLAN_CODE]
 }
 
+export function hasUnlimitedInterviewAccess(user) {
+  if (!user) return false
+
+  const quota = Number(user.interview_quota ?? user.interviewQuota)
+  if (Number.isFinite(quota) && quota < 0) {
+    return true
+  }
+
+  const name = String(user.name ?? '').trim()
+  const email = normalizeEmail(String(user.email ?? '').trim() || '')
+
+  return ADMIN_UNLIMITED_IDENTIFIERS.names.includes(name)
+    || ADMIN_UNLIMITED_IDENTIFIERS.emails.includes(email)
+}
+
 export function validateRegistrationInput({ name, email, password }) {
   if (!name?.trim()) return '请输入昵称'
   if (!email?.trim()) return '请输入邮箱'
@@ -192,6 +211,8 @@ export async function verifySessionToken(token, secret) {
 }
 
 export function getRemainingInterviews(user) {
+  if (hasUnlimitedInterviewAccess(user)) return -1
+
   const fallbackQuota = getPlanDefinition(user?.subscription_plan ?? user?.subscriptionPlan).interviewQuota
   const quota = Number(user?.interview_quota ?? user?.interviewQuota ?? fallbackQuota)
   const used = Number(user?.interview_used ?? user?.interviewUsed ?? 0)
@@ -203,8 +224,12 @@ export function sanitizeUser(user) {
   if (!user) return null
 
   const subscriptionPlan = user.subscription_plan ?? user.subscriptionPlan ?? FREE_PLAN_CODE
-  const planDefinition = getPlanDefinition(subscriptionPlan)
-  const interviewQuota = Number(user.interview_quota ?? user.interviewQuota ?? planDefinition.interviewQuota)
+  const hasUnlimitedAccess = hasUnlimitedInterviewAccess(user)
+  const resolvedPlanCode = hasUnlimitedAccess ? PRO_PLAN_CODE : subscriptionPlan
+  const planDefinition = getPlanDefinition(resolvedPlanCode)
+  const interviewQuota = hasUnlimitedAccess
+    ? UNLIMITED_INTERVIEW_QUOTA
+    : Number(user.interview_quota ?? user.interviewQuota ?? planDefinition.interviewQuota)
   const interviewUsed = Number(user.interview_used ?? user.interviewUsed ?? 0)
 
   return {
@@ -212,7 +237,7 @@ export function sanitizeUser(user) {
     name: user.name,
     email: user.email,
     createdAt: user.created_at ?? user.createdAt ?? null,
-    subscriptionPlan,
+    subscriptionPlan: resolvedPlanCode,
     subscriptionLabel: planDefinition.label,
     interviewQuota,
     interviewUsed,

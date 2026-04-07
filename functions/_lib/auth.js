@@ -8,6 +8,7 @@ import {
   createSessionToken,
   createUserId,
   fingerprintPassword,
+  hasUnlimitedInterviewAccess,
   isSecureRequest,
   normalizeEmail,
   parseCookieHeader,
@@ -103,6 +104,13 @@ export async function ensureInterviewQuota(context, interviewId) {
     .first()
 
   if (!existingAttempt) {
+    if (hasUnlimitedInterviewAccess(auth.user)) {
+      return {
+        ...auth,
+        usage: sanitizeUser(auth.user),
+      }
+    }
+
     const remaining = Number(auth.user.interview_quota) < 0
       ? -1
       : Number(auth.user.interview_quota) - Number(auth.user.interview_used)
