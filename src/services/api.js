@@ -10,6 +10,7 @@ export async function sendChatMessage({
 }) {
   const response = await fetch('/api/chat', {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jobType,
@@ -34,16 +35,16 @@ export async function sendChatMessage({
     throw error
   }
 
+  if (!response.body) {
+    throw new Error('API returned an empty response body')
+  }
+
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let lineBuffer = ''
   let meta = null
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-
-    lineBuffer += decoder.decode(value, { stream: true })
+  const processLines = () => {
     const lines = lineBuffer.split('\n')
     lineBuffer = lines.pop() ?? ''
 
@@ -51,7 +52,7 @@ export async function sendChatMessage({
       if (!line.startsWith('data: ')) continue
 
       const payload = line.slice(6).trim()
-      if (payload === '[DONE]') return meta
+      if (payload === '[DONE]') return true
 
       try {
         const parsed = JSON.parse(payload)
@@ -68,6 +69,23 @@ export async function sendChatMessage({
         }
       }
     }
+
+    return false
+  }
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    lineBuffer += decoder.decode(value, { stream: true })
+    if (processLines()) {
+      return meta
+    }
+  }
+
+  lineBuffer += decoder.decode()
+  if (processLines()) {
+    return meta
   }
 
   return meta

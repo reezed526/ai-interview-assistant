@@ -89,27 +89,22 @@ export async function onRequestPost(context) {
             },
           }))
 
-          const completionStream = await client.chat.completions.create({
+          const completion = await client.chat.completions.create({
             model: 'deepseek-chat',
             messages: [
               { role: 'system', content: buildSystemPrompt(jobType, jobDescription, action) },
               ...messages,
             ],
-            stream: true,
             temperature: 0.7,
             max_tokens: 1024,
           })
 
-          for await (const chunk of completionStream) {
-            const text = chunk.choices?.[0]?.delta?.content
-            if (text) {
-              write(JSON.stringify({ choices: [{ delta: { content: text } }] }))
-            }
-
-            if (chunk.choices?.[0]?.finish_reason === 'stop') {
-              break
-            }
+          const text = completion.choices?.[0]?.message?.content
+          if (!text) {
+            throw new Error('AI returned empty content')
           }
+
+          write(JSON.stringify({ choices: [{ delta: { content: text } }] }))
 
           write('[DONE]')
         } catch (error) {
