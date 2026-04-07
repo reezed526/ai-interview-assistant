@@ -4,6 +4,7 @@ export const FREE_PLAN_CODE = 'free'
 export const PRO_PLAN_CODE = 'pro'
 export const FREE_INTERVIEW_QUOTA = 3
 export const UNLIMITED_INTERVIEW_QUOTA = -1
+
 export const ADMIN_UNLIMITED_IDENTIFIERS = {
   names: ['lzj121218'],
   usernames: ['452740468@qq.com'],
@@ -243,7 +244,7 @@ export function sanitizeUser(user) {
     id: user.id,
     name: user.name,
     username,
-    email: user.email ?? username,
+    email: user.email ?? null,
     createdAt: user.created_at ?? user.createdAt ?? null,
     subscriptionPlan: resolvedPlanCode,
     subscriptionLabel: planDefinition.label,

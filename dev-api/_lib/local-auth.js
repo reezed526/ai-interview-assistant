@@ -173,7 +173,7 @@ export async function handleRegister(req, res) {
     id: userId,
     name: name.trim(),
     username: normalizedUsername,
-    email: normalizedUsername,
+    email: null,
     password_hash: passwordHash,
     password_salt: passwordSalt,
     created_at: createdAt,

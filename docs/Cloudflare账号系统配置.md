@@ -1,40 +1,68 @@
-# Cloudflare 云同步数据配置
+# Cloudflare 账号系统配置
 
-这份配置用于让你的 Cloudflare Pages 站点支持云端共享账号，并把错题本、面试过程状态、报告一起同步到 D1。
+这份配置用于让你的 Cloudflare Pages 站点支持云端共享账号，并把错题本、面试过程状态、报告同步到 D1。
 
 ## 1. 确认 D1 数据库
 
-如果你已经创建过 D1，可以直接继续使用原来的数据库。
-
+如果你已经创建过 D1，可以继续使用原来的数据库。  
 如果还没有：
 
 1. 进入 `Workers & Pages`
 2. 打开 `D1 SQL Database`
 3. 点击 `Create`
-4. 新建数据库，例如：`ai-interview-auth`
+4. 新建数据库，例如 `ai-interview-auth`
 
-## 2. 执行最新表结构 SQL
+## 2. 先看当前库是不是老结构
 
-打开 D1 数据库的 `Console`，执行 [database/auth-schema.sql](c:\Users\45274\Desktop\ai-interview-assistant\database\auth-schema.sql) 全部内容。
+如果你的 `users` 表原来还是邮箱登录结构，需要先执行用户名迁移脚本，再部署新代码。
 
-这次 SQL 不只是用户表，还包括：
+老结构通常是这样：
+
+- `users.email` 是 `NOT NULL UNIQUE`
+- 没有 `users.username` 字段
+
+## 3. 执行用户名迁移
+
+打开 D1 数据库的 `Console`，先执行：
+
+- [username-migration.sql](/c:/Users/45274/Desktop/ai-interview-assistant/database/username-migration.sql)
+
+这个脚本会：
+
+- 新建真正的 `username` 列
+- 把旧 `email` 列里的登录标识迁移到 `username`
+- 保留 `email` 字段为可选字段
+- 重建 `users` 表和唯一索引
+
+注意：
+
+- 这是一次性迁移脚本，适合从旧结构升级
+- 执行前建议先备份 D1 数据
+- 必须先跑这个脚本，再部署新的认证代码
+
+## 4. 新环境直接执行最新表结构
+
+如果你是全新环境，没有历史用户数据，直接执行：
+
+- [auth-schema.sql](/c:/Users/45274/Desktop/ai-interview-assistant/database/auth-schema.sql)
+
+它会创建：
 
 - `users`
+- `interview_attempts`
 - `notebook_entries`
 - `interview_states`
 
-如果你之前已经建过 `users` 表，也可以重复执行这份 SQL，`IF NOT EXISTS` 不会破坏已有表。
-
-## 3. 检查 Pages 绑定
+## 5. 检查 Pages 绑定
 
 进入 Pages 项目：
 
 1. 打开 `Settings`
 2. 进入 `Bindings`
 3. 确认已经有一个 D1 binding
-4. Variable name 必须是：`DB`
+4. Variable name 必须是 `DB`
 
-## 4. 检查环境变量
+## 6. 检查环境变量
 
 进入 Pages 项目：
 
@@ -46,40 +74,25 @@
 - `DEEPSEEK_API_KEY`
 - `AUTH_SECRET`
 
-## 5. 重新部署
+## 7. 推送并重新部署
 
-推送最新代码后重新部署：
+迁移完成后，再推送最新代码：
 
 ```powershell
 git add .
-git commit -m "sync user data to d1"
+git commit -m "migrate auth to username column"
 git push
 ```
 
-## 6. 这次会上云的数据
+如果你的 Cloudflare Pages 已连接 Git 仓库，推送后会自动重新部署。
 
-现在会同步到云端的内容：
-
-- 用户账号
-- 登录状态
-- 错题本
-- 当前面试过程状态
-- 当前面试报告
-
-这意味着：
-
-- 用户换浏览器或换设备后，登录同一账号仍能看到自己的错题本
-- 如果用户中途退出，再次登录后还能恢复当前面试状态和报告
-
-## 7. 部署后验证
+## 8. 部署后验证
 
 建议按下面顺序验证：
 
-1. 用户 A 在设备 1 注册并登录
-2. 保存几条错题本
-3. 开始一场面试，做到一半关闭页面
-4. 在设备 2 登录同一账号
-5. 检查错题本是否同步
-6. 检查面试状态是否恢复
-7. 完成面试并进入报告页
-8. 再换设备登录，检查报告是否还在
+1. 用一个旧账号登录，确认还能正常进入
+2. 新注册一个用户名账号
+3. 用不存在的用户名登录，确认会提示“该用户名还没有注册”
+4. 点击错误提示里的“去注册”，确认能切到注册页签
+5. 完成一次面试，确认错题本和报告能正常保存
+6. 换一个设备或浏览器重新登录，确认数据仍然存在

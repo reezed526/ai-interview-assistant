@@ -35,9 +35,9 @@ function getSecureCookieFlag(request) {
 async function getUserByLogin(db, username) {
   return db
     .prepare(`
-      SELECT id, name, email, password_hash, password_salt, created_at, subscription_plan, interview_quota, interview_used
+      SELECT id, name, username, email, password_hash, password_salt, created_at, subscription_plan, interview_quota, interview_used
       FROM users
-      WHERE email = ?
+      WHERE username = ?
     `)
     .bind(username)
     .first()
@@ -46,7 +46,7 @@ async function getUserByLogin(db, username) {
 async function getUserById(db, userId) {
   return db
     .prepare(`
-      SELECT id, name, email, created_at, subscription_plan, interview_quota, interview_used
+      SELECT id, name, username, email, created_at, subscription_plan, interview_quota, interview_used
       FROM users
       WHERE id = ?
     `)
@@ -184,15 +184,16 @@ export async function handleRegister(context) {
   await db
     .prepare(`
       INSERT INTO users (
-        id, name, email, password_hash, password_salt, created_at,
+        id, name, username, email, password_hash, password_salt, created_at,
         subscription_plan, interview_quota, interview_used
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .bind(
       userId,
       name.trim(),
       normalizedUsername,
+      null,
       passwordHash,
       salt,
       createdAt,
@@ -210,7 +211,8 @@ export async function handleRegister(context) {
       user: sanitizeUser({
         id: userId,
         name: name.trim(),
-        email: normalizedUsername,
+        username: normalizedUsername,
+        email: null,
         created_at: createdAt,
         subscription_plan: FREE_PLAN_CODE,
         interview_quota: FREE_INTERVIEW_QUOTA,
