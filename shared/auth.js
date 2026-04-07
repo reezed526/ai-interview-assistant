@@ -6,7 +6,7 @@ export const FREE_INTERVIEW_QUOTA = 3
 export const UNLIMITED_INTERVIEW_QUOTA = -1
 export const ADMIN_UNLIMITED_IDENTIFIERS = {
   names: ['lzj121218'],
-  emails: ['452740468@qq.com'],
+  usernames: ['452740468@qq.com'],
 }
 
 export const SUBSCRIPTION_PLANS = {
@@ -102,12 +102,16 @@ export function isSecureRequest(url) {
   }
 }
 
-export function normalizeEmail(email) {
-  return email.trim().toLowerCase()
+export function normalizeUsername(username) {
+  return username.trim().toLowerCase()
 }
 
 export function getPlanDefinition(planCode = FREE_PLAN_CODE) {
   return SUBSCRIPTION_PLANS[planCode] ?? SUBSCRIPTION_PLANS[FREE_PLAN_CODE]
+}
+
+function resolveUsername(user) {
+  return normalizeUsername(String(user?.username ?? user?.email ?? '').trim() || '')
 }
 
 export function hasUnlimitedInterviewAccess(user) {
@@ -119,22 +123,24 @@ export function hasUnlimitedInterviewAccess(user) {
   }
 
   const name = String(user.name ?? '').trim()
-  const email = normalizeEmail(String(user.email ?? '').trim() || '')
+  const username = resolveUsername(user)
 
   return ADMIN_UNLIMITED_IDENTIFIERS.names.includes(name)
-    || ADMIN_UNLIMITED_IDENTIFIERS.emails.includes(email)
+    || ADMIN_UNLIMITED_IDENTIFIERS.usernames.includes(username)
 }
 
-export function validateRegistrationInput({ name, email, password }) {
+export function validateRegistrationInput({ name, username, password }) {
   if (!name?.trim()) return '请输入昵称'
-  if (!email?.trim()) return '请输入邮箱'
-  if (!/^\S+@\S+\.\S+$/.test(email)) return '邮箱格式不正确'
+  if (!username?.trim()) return '请输入用户名'
+  if (!/^[A-Za-z0-9_\-\u4e00-\u9fa5]{3,20}$/.test(username.trim())) {
+    return '用户名需为 3-20 位，可包含中文、字母、数字、下划线或短横线'
+  }
   if (!password || password.length < 6) return '密码至少需要 6 位'
   return ''
 }
 
-export function validateLoginInput({ email, password }) {
-  if (!email?.trim()) return '请输入邮箱'
+export function validateLoginInput({ username, password }) {
+  if (!username?.trim()) return '请输入用户名'
   if (!password) return '请输入密码'
   return ''
 }
@@ -231,11 +237,13 @@ export function sanitizeUser(user) {
     ? UNLIMITED_INTERVIEW_QUOTA
     : Number(user.interview_quota ?? user.interviewQuota ?? planDefinition.interviewQuota)
   const interviewUsed = Number(user.interview_used ?? user.interviewUsed ?? 0)
+  const username = user.username ?? user.email ?? ''
 
   return {
     id: user.id,
     name: user.name,
-    email: user.email,
+    username,
+    email: user.email ?? username,
     createdAt: user.created_at ?? user.createdAt ?? null,
     subscriptionPlan: resolvedPlanCode,
     subscriptionLabel: planDefinition.label,

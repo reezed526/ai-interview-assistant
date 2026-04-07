@@ -11,7 +11,7 @@ import {
   createUserId,
   fingerprintPassword,
   hasUnlimitedInterviewAccess,
-  normalizeEmail,
+  normalizeUsername,
   parseCookieHeader,
   sanitizeUser,
   validateLoginInput,
@@ -68,6 +68,10 @@ function json(res, status, data, headers = {}) {
 function getSecureFlag(req) {
   const proto = req.headers['x-forwarded-proto']
   return proto === 'https'
+}
+
+function getLoginValue(user) {
+  return normalizeUsername(user.username ?? user.email ?? '')
 }
 
 export async function requireAuthenticatedUser(req, res) {
@@ -148,16 +152,16 @@ export async function ensureInterviewQuota(req, res, interviewId) {
 }
 
 export async function handleRegister(req, res) {
-  const { name = '', email = '', password = '' } = req.body ?? {}
-  const validationError = validateRegistrationInput({ name, email, password })
+  const { name = '', username = '', password = '' } = req.body ?? {}
+  const validationError = validateRegistrationInput({ name, username, password })
   if (validationError) {
     return json(res, 400, { error: validationError })
   }
 
-  const normalizedEmail = normalizeEmail(email)
+  const normalizedUsername = normalizeUsername(username)
   const users = await readUsers()
-  if (users.some((user) => user.email === normalizedEmail)) {
-    return json(res, 409, { error: '该邮箱已注册' })
+  if (users.some((user) => getLoginValue(user) === normalizedUsername)) {
+    return json(res, 409, { error: '该用户名已注册', code: 'USERNAME_ALREADY_EXISTS' })
   }
 
   const userId = createUserId()
@@ -168,7 +172,8 @@ export async function handleRegister(req, res) {
   const user = {
     id: userId,
     name: name.trim(),
-    email: normalizedEmail,
+    username: normalizedUsername,
+    email: normalizedUsername,
     password_hash: passwordHash,
     password_salt: passwordSalt,
     created_at: createdAt,
@@ -190,23 +195,23 @@ export async function handleRegister(req, res) {
 }
 
 export async function handleLogin(req, res) {
-  const { email = '', password = '' } = req.body ?? {}
-  const validationError = validateLoginInput({ email, password })
+  const { username = '', password = '' } = req.body ?? {}
+  const validationError = validateLoginInput({ username, password })
   if (validationError) {
     return json(res, 400, { error: validationError })
   }
 
-  const normalizedEmail = normalizeEmail(email)
+  const normalizedUsername = normalizeUsername(username)
   const users = await readUsers()
-  const user = users.find((item) => item.email === normalizedEmail)
+  const user = users.find((item) => getLoginValue(item) === normalizedUsername)
 
   if (!user) {
-    return json(res, 401, { error: '邮箱或密码错误' })
+    return json(res, 404, { error: '该用户名还没有注册', code: 'USER_NOT_FOUND' })
   }
 
   const passwordHash = await fingerprintPassword(password, user.password_salt)
   if (passwordHash !== user.password_hash) {
-    return json(res, 401, { error: '邮箱或密码错误' })
+    return json(res, 401, { error: '用户名或密码错误', code: 'INVALID_PASSWORD' })
   }
 
   const token = await createSessionToken(user.id, AUTH_SECRET)

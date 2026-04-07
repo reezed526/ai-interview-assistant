@@ -1,6 +1,6 @@
 <template>
   <Transition name="bubble" appear>
-    <div :class="['flex gap-2.5', isUser ? 'justify-end' : 'justify-start']">
+    <div :class="['flex w-full gap-2.5', isUser ? 'justify-end' : 'justify-start']">
       <div v-if="!isUser" class="shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mt-0.5">
         <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path
@@ -34,7 +34,7 @@
 
       <div v-if="isUser" class="shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mt-0.5">
         <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
         </svg>
       </div>
     </div>
@@ -56,6 +56,7 @@ const isUser = computed(() => props.message.role === 'user')
 .bubble-enter-active {
   transition: all 0.2s ease-out;
 }
+
 .bubble-enter-from {
   opacity: 0;
   transform: translateY(8px);

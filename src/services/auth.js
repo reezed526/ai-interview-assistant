@@ -10,7 +10,9 @@ async function request(url, options = {}) {
 
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || `HTTP ${response.status}`)
+    const error = new Error(data.error || `HTTP ${response.status}`)
+    error.code = data.code
+    throw error
   }
 
   return data

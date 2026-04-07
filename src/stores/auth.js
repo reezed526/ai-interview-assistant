@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => Boolean(state.currentUser?.id),
-    displayName: (state) => state.currentUser?.name || state.currentUser?.email || '',
+    displayName: (state) => state.currentUser?.name || state.currentUser?.username || '',
     subscriptionPlan: (state) => state.currentUser?.subscriptionPlan || 'free',
     subscriptionLabel: (state) => state.currentUser?.subscriptionLabel || '免费计划',
     interviewRemaining: (state) => state.currentUser?.interviewRemaining ?? 0,

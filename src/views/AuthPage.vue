@@ -51,18 +51,19 @@
               v-model.trim="form.name"
               type="text"
               maxlength="20"
-              placeholder="例如：小张"
+              placeholder="例如：李宥辰"
               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
           <div>
-            <label class="mb-2 block text-sm font-medium text-slate-700">邮箱</label>
+            <label class="mb-2 block text-sm font-medium text-slate-700">用户名</label>
             <input
-              v-model.trim="form.email"
-              type="email"
+              v-model.trim="form.username"
+              type="text"
+              maxlength="20"
               autocomplete="username"
-              placeholder="name@example.com"
+              placeholder="3-20 位，可包含中文、字母、数字、下划线或短横线"
               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             />
           </div>
@@ -72,7 +73,7 @@
             <input
               v-model="form.password"
               type="password"
-              autocomplete="current-password"
+              :autocomplete="mode === 'register' ? 'new-password' : 'current-password'"
               placeholder="至少 6 位"
               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             />
@@ -90,7 +91,15 @@
           </div>
 
           <div v-if="errorMessage" class="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-            {{ errorMessage }}
+            <span>{{ errorMessage }}</span>
+            <button
+              v-if="showRegisterLink"
+              type="button"
+              class="ml-2 font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              @click="jumpToRegister"
+            >
+              去注册
+            </button>
           </div>
 
           <button
@@ -114,7 +123,7 @@
         </p>
 
         <p class="mt-4 rounded-2xl bg-blue-50 px-4 py-3 text-xs leading-6 text-blue-700">
-          新账号默认开通免费计划，当前可进行 3 次面试模拟。订阅计划后续会接在这个账号体系中。
+          新账号默认开通免费计划，当前可进行 3 次面试模拟。后续订阅也会绑定在这个用户名体系中。
         </p>
       </section>
     </div>
@@ -122,7 +131,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { useInterviewStore } from '@/stores/interview.js'
@@ -147,29 +156,37 @@ const features = [
 const mode = ref('login')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+const errorCode = ref('')
 const form = reactive({
   name: '',
-  email: '',
+  username: '',
   password: '',
   confirmPassword: '',
 })
 
+const showRegisterLink = computed(() => mode.value === 'login' && errorCode.value === 'USER_NOT_FOUND')
+
 function switchMode(nextMode) {
   mode.value = nextMode
   errorMessage.value = ''
+  errorCode.value = ''
   form.password = ''
   form.confirmPassword = ''
+}
+
+function jumpToRegister() {
+  switchMode('register')
 }
 
 function validateForm() {
   if (mode.value === 'register' && !form.name) {
     return '请输入昵称'
   }
-  if (!form.email) {
-    return '请输入邮箱'
+  if (!form.username) {
+    return '请输入用户名'
   }
-  if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-    return '邮箱格式不正确'
+  if (!/^[A-Za-z0-9_\-\u4e00-\u9fa5]{3,20}$/.test(form.username.trim())) {
+    return '用户名需为 3-20 位，可包含中文、字母、数字、下划线或短横线'
   }
   if (!form.password || form.password.length < 6) {
     return '密码至少需要 6 位'
@@ -182,6 +199,7 @@ function validateForm() {
 
 async function handleSubmit() {
   errorMessage.value = validateForm()
+  errorCode.value = ''
   if (errorMessage.value) return
 
   isSubmitting.value = true
@@ -189,12 +207,12 @@ async function handleSubmit() {
     if (mode.value === 'register') {
       await authStore.register({
         name: form.name,
-        email: form.email,
+        username: form.username,
         password: form.password,
       })
     } else {
       await authStore.login({
-        email: form.email,
+        username: form.username,
         password: form.password,
       })
     }
@@ -206,6 +224,7 @@ async function handleSubmit() {
     router.replace('/')
   } catch (error) {
     errorMessage.value = error?.message || '操作失败，请稍后重试'
+    errorCode.value = error?.code || ''
   } finally {
     isSubmitting.value = false
   }

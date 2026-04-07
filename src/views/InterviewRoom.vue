@@ -28,28 +28,30 @@
       </button>
     </header>
 
-    <div class="flex-1 overflow-y-auto px-4 py-5 space-y-4">
-      <ChatBubble
-        v-for="msg in store.messages"
-        :key="msg.id"
-        :message="msg"
-      />
+    <div class="flex-1 overflow-y-auto">
+      <div class="mx-auto w-full max-w-5xl px-4 py-5 space-y-4">
+        <ChatBubble
+          v-for="msg in store.messages"
+          :key="msg.id"
+          :message="msg"
+        />
 
-      <Transition name="fade">
-        <div v-if="hasError" class="flex justify-center">
-          <div class="bg-red-50 border border-red-100 rounded-2xl px-4 py-3 text-center max-w-xs">
-            <p class="text-sm text-red-600 mb-2">请求失败，请检查网络或 API 配置。</p>
-            <button
-              @click="retryLastRequest"
-              class="text-sm font-medium text-blue-600 hover:text-blue-800"
-            >
-              重试
-            </button>
+        <Transition name="fade">
+          <div v-if="hasError" class="flex justify-center">
+            <div class="bg-red-50 border border-red-100 rounded-2xl px-4 py-3 text-center max-w-xs">
+              <p class="text-sm text-red-600 mb-2">请求失败，请检查网络或 API 配置。</p>
+              <button
+                @click="retryLastRequest"
+                class="text-sm font-medium text-blue-600 hover:text-blue-800"
+              >
+                重试
+              </button>
+            </div>
           </div>
-        </div>
-      </Transition>
+        </Transition>
 
-      <div ref="bottomRef" class="h-1" />
+        <div ref="bottomRef" class="h-1" />
+      </div>
     </div>
 
     <Transition name="overlay">
@@ -62,7 +64,7 @@
           <div class="text-5xl mb-4">📝</div>
           <h2 class="text-xl font-bold text-gray-900 mb-2">面试结束</h2>
           <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-            AI 正在整理你在「{{ store.jobType }}」岗位上的表现。
+            AI 正在整理你在“{{ store.jobType }}”岗位上的表现。
             <br />
             稍后即可查看详细报告。
           </p>

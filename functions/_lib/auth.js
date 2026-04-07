@@ -10,7 +10,7 @@ import {
   fingerprintPassword,
   hasUnlimitedInterviewAccess,
   isSecureRequest,
-  normalizeEmail,
+  normalizeUsername,
   parseCookieHeader,
   sanitizeUser,
   validateLoginInput,
@@ -32,14 +32,14 @@ function getSecureCookieFlag(request) {
   return isSecureRequest(request.url)
 }
 
-async function getUserByEmail(db, email) {
+async function getUserByLogin(db, username) {
   return db
     .prepare(`
       SELECT id, name, email, password_hash, password_salt, created_at, subscription_plan, interview_quota, interview_used
       FROM users
       WHERE email = ?
     `)
-    .bind(email)
+    .bind(username)
     .first()
 }
 
@@ -164,16 +164,16 @@ export async function handleRegister(context) {
     return json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { name = '', email = '', password = '' } = body ?? {}
-  const validationError = validateRegistrationInput({ name, email, password })
+  const { name = '', username = '', password = '' } = body ?? {}
+  const validationError = validateRegistrationInput({ name, username, password })
   if (validationError) {
     return json({ error: validationError }, { status: 400 })
   }
 
-  const normalizedEmail = normalizeEmail(email)
-  const existingUser = await getUserByEmail(db, normalizedEmail)
+  const normalizedUsername = normalizeUsername(username)
+  const existingUser = await getUserByLogin(db, normalizedUsername)
   if (existingUser) {
-    return json({ error: '该邮箱已注册' }, { status: 409 })
+    return json({ error: '该用户名已注册', code: 'USERNAME_ALREADY_EXISTS' }, { status: 409 })
   }
 
   const userId = createUserId()
@@ -192,7 +192,7 @@ export async function handleRegister(context) {
     .bind(
       userId,
       name.trim(),
-      normalizedEmail,
+      normalizedUsername,
       passwordHash,
       salt,
       createdAt,
@@ -210,7 +210,7 @@ export async function handleRegister(context) {
       user: sanitizeUser({
         id: userId,
         name: name.trim(),
-        email: normalizedEmail,
+        email: normalizedUsername,
         created_at: createdAt,
         subscription_plan: FREE_PLAN_CODE,
         interview_quota: FREE_INTERVIEW_QUOTA,
@@ -241,21 +241,21 @@ export async function handleLogin(context) {
     return json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { email = '', password = '' } = body ?? {}
-  const validationError = validateLoginInput({ email, password })
+  const { username = '', password = '' } = body ?? {}
+  const validationError = validateLoginInput({ username, password })
   if (validationError) {
     return json({ error: validationError }, { status: 400 })
   }
 
-  const normalizedEmail = normalizeEmail(email)
-  const user = await getUserByEmail(db, normalizedEmail)
+  const normalizedUsername = normalizeUsername(username)
+  const user = await getUserByLogin(db, normalizedUsername)
   if (!user) {
-    return json({ error: '邮箱或密码错误' }, { status: 401 })
+    return json({ error: '该用户名还没有注册', code: 'USER_NOT_FOUND' }, { status: 404 })
   }
 
   const passwordHash = await fingerprintPassword(password, user.password_salt)
   if (passwordHash !== user.password_hash) {
-    return json({ error: '邮箱或密码错误' }, { status: 401 })
+    return json({ error: '用户名或密码错误', code: 'INVALID_PASSWORD' }, { status: 401 })
   }
 
   const token = await createSessionToken(user.id, authSecret)
