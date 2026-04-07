@@ -140,7 +140,7 @@
     </div>
 
     <div v-else class="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center">
-      <div class="text-6xl mb-5">📝</div>
+      <div class="text-6xl mb-5">本</div>
       <h2 class="text-lg font-semibold text-gray-700 mb-2">错题本还是空的</h2>
       <p class="text-sm text-gray-400 mb-8 leading-relaxed">
         完成一次面试后，可以在报告页把题目保存到错题本，
@@ -185,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useNotebookStore } from '@/stores/notebook.js'
 

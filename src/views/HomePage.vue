@@ -58,40 +58,38 @@
           <p class="text-gray-500 text-sm leading-relaxed">
             AI 扮演面试官，完成出题、追问、评分和反馈。
             <br />
-            每场约 15 分钟，支持多类常见岗位。
+            每场约 15 分钟，支持任意目标岗位。
           </p>
         </div>
 
         <div class="mb-6">
-          <div class="flex items-center justify-between mb-3">
-            <label class="text-sm font-medium text-gray-700">选择目标岗位</label>
-            <span v-if="showJobError" class="text-xs text-red-500 animate-pulse">请先选择岗位</span>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">目标岗位</label>
+            <span v-if="showJobError" class="text-xs text-red-500 animate-pulse">请先输入目标岗位</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <input
+            v-model.trim="selectedJob"
+            type="text"
+            placeholder="输入目标岗位，如：字节跳动 C端产品经理"
+            class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm text-gray-700 placeholder-gray-300 bg-white transition-shadow"
+            @input="showJobError = false"
+          />
+
+          <div class="mt-3 flex flex-wrap gap-2">
             <button
-              v-for="job in jobTypes"
-              :key="job.value"
-              @click="selectJob(job.value)"
+              v-for="job in quickJobs"
+              :key="job"
+              type="button"
+              @click="selectJob(job)"
               :class="[
-                'relative p-4 rounded-2xl border-2 text-left transition-all duration-150',
-                selectedJob === job.value
-                  ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
-                  : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30',
+                'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                selectedJob === job
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-blue-200 hover:text-blue-600',
               ]"
             >
-              <span
-                v-if="selectedJob === job.value"
-                class="absolute top-2.5 right-2.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
-              >
-                <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </span>
-
-              <div class="text-2xl mb-2">{{ job.icon }}</div>
-              <div class="font-semibold text-gray-900 text-sm">{{ job.label }}</div>
-              <div class="text-xs text-gray-400 mt-0.5">{{ job.desc }}</div>
+              {{ job }}
             </button>
           </div>
         </div>
@@ -156,11 +154,15 @@ const showJobError = ref(false)
 
 const notebookCount = computed(() => notebookStore.entries.length)
 
-const jobTypes = [
-  { value: '产品经理', label: '产品经理', icon: '产', desc: 'Product Manager' },
-  { value: '技术研发', label: '技术研发', icon: '码', desc: 'Software Engineer' },
-  { value: '销售', label: '销售', icon: '销', desc: 'Sales & BD' },
-  { value: '职能', label: '职能', icon: '职', desc: 'Operations / HR' },
+const quickJobs = [
+  '产品经理',
+  '前端工程师',
+  '后端工程师',
+  '算法工程师',
+  '大客户销售',
+  'HRBP',
+  '数据分析师',
+  '运营',
 ]
 
 const steps = [
@@ -175,12 +177,12 @@ function selectJob(value) {
 }
 
 function handleStart() {
-  if (!selectedJob.value) {
+  if (!selectedJob.value.trim()) {
     showJobError.value = true
     return
   }
 
-  interviewStore.startInterview(selectedJob.value, jobDescription.value)
+  interviewStore.startInterview(selectedJob.value.trim(), jobDescription.value)
   router.push('/interview')
 }
 

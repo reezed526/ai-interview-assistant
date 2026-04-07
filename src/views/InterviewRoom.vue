@@ -12,7 +12,7 @@
           </svg>
         </div>
         <div>
-          <p class="text-sm font-semibold text-gray-900 leading-none">{{ store.jobType }} 面试</p>
+          <p class="text-sm font-semibold text-gray-900 leading-none">{{ store.jobType }}</p>
           <p class="text-xs text-gray-400 mt-0.5 leading-none">{{ progressText }}</p>
         </div>
       </div>
@@ -57,10 +57,10 @@
         @click.self="showEndOverlay = false"
       >
         <div class="bg-white rounded-3xl px-8 py-8 text-center shadow-2xl w-full max-w-sm">
-          <div class="text-5xl mb-4">🏁</div>
+          <div class="text-5xl mb-4">报</div>
           <h2 class="text-xl font-bold text-gray-900 mb-2">面试结束</h2>
           <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-            AI 正在整理你的表现，
+            AI 正在整理你在「{{ store.jobType }}」岗位上的表现。
             <br />
             稍后即可查看详细报告。
           </p>
@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, computed } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInterviewStore } from '@/stores/interview.js'
 import { sendChatMessage } from '@/services/api.js'

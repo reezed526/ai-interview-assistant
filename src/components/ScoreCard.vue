@@ -35,7 +35,7 @@
 
         <div class="bg-amber-50 border border-amber-100 rounded-xl p-3.5">
           <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-sm">⚠️</span>
+            <span class="text-sm">要</span>
             <span class="text-xs font-semibold text-amber-700">不足之处</span>
           </div>
           <p class="text-sm text-amber-900 leading-relaxed">{{ review.feedback }}</p>
@@ -43,7 +43,7 @@
 
         <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
           <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-sm">✅</span>
+            <span class="text-sm">优</span>
             <span class="text-xs font-semibold text-emerald-700">更好的方向</span>
           </div>
           <p class="text-sm text-emerald-900 leading-relaxed">{{ review.betterDirection }}</p>
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   review: { type: Object, required: true },

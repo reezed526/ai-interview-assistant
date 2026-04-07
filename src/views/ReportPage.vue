@@ -69,7 +69,7 @@
 
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
         <div class="flex items-center gap-2 mb-2">
-          <span class="text-base">💡</span>
+          <span class="text-base">建</span>
           <h2 class="text-sm font-semibold text-blue-800">AI 整体建议</h2>
         </div>
         <p class="text-sm text-blue-900 leading-relaxed">{{ report.overallSuggestion }}</p>
@@ -105,7 +105,7 @@
     </div>
 
     <div v-else class="max-w-xl mx-auto px-4 mt-16 text-center">
-      <p class="text-4xl mb-4">😵</p>
+      <p class="text-4xl mb-4">错</p>
       <p class="text-gray-600 font-medium mb-1">报告生成失败</p>
       <p class="text-sm text-gray-400 mb-6">{{ errorMsg }}</p>
       <button
@@ -131,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useInterviewStore } from '@/stores/interview.js'
 import { useNotebookStore } from '@/stores/notebook.js'
@@ -205,7 +205,7 @@ const DIMENSION_LABELS = {
   completeness: '完整性',
   depth: '专业深度',
   expression: '表达力',
-  relevance: '岗位匹配度',
+  relevance: '岗位匹配',
 }
 
 const dimensionList = computed(() =>
