@@ -35,7 +35,7 @@
 
         <div class="bg-amber-50 border border-amber-100 rounded-xl p-3.5">
           <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-sm">要</span>
+            <span class="text-sm">⚠</span>
             <span class="text-xs font-semibold text-amber-700">不足之处</span>
           </div>
           <p class="text-sm text-amber-900 leading-relaxed">{{ review.feedback }}</p>
@@ -43,7 +43,7 @@
 
         <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
           <div class="flex items-center gap-1.5 mb-1">
-            <span class="text-sm">优</span>
+            <span class="text-sm">✓</span>
             <span class="text-xs font-semibold text-emerald-700">更好的方向</span>
           </div>
           <p class="text-sm text-emerald-900 leading-relaxed">{{ review.betterDirection }}</p>
@@ -51,15 +51,16 @@
 
         <button
           @click="handleSave"
-          :disabled="saved"
+          :disabled="saved || saving"
           class="flex items-center gap-1.5 text-xs font-medium transition-colors disabled:cursor-default"
-          :class="saved ? 'text-green-600' : 'text-blue-500 hover:text-blue-700'"
+          :class="saved ? 'text-green-600' : saving ? 'text-gray-400' : 'text-blue-500 hover:text-blue-700'"
         >
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path v-if="saved" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            <path v-else-if="saving" stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2" />
             <path v-else stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          {{ saved ? '已保存到错题本' : '保存到错题本' }}
+          {{ saved ? '已保存到错题本' : saving ? '保存中...' : '保存到错题本' }}
         </button>
       </div>
     </Transition>
@@ -72,12 +73,13 @@ import { computed, ref } from 'vue'
 const props = defineProps({
   review: { type: Object, required: true },
   index: { type: Number, required: true },
+  saved: { type: Boolean, default: false },
+  saving: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['save-to-notebook'])
 
 const expanded = ref(false)
-const saved = ref(false)
 
 const scoreColor = computed(() => {
   if (props.review.score >= 80) return 'text-green-600'
@@ -86,12 +88,11 @@ const scoreColor = computed(() => {
 })
 
 function handleSave() {
-  if (saved.value) {
+  if (props.saved || props.saving) {
     return
   }
 
   emit('save-to-notebook')
-  saved.value = true
 }
 </script>
 

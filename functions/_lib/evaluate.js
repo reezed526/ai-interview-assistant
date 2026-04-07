@@ -9,7 +9,6 @@ export function createDeepSeekClient(apiKey) {
 
 export function buildEvaluatorPrompt(jobType, jobDescription) {
   return `你是一位资深中文面试评估专家。请根据以下按“主问题”整理后的面试记录，对候选人的表现进行评估。
-
 ## 候选人应聘岗位
 岗位类型：${jobType}
 岗位 JD：${jobDescription?.trim() || '（未提供）'}
@@ -61,6 +60,10 @@ export function buildEvaluatorPrompt(jobType, jobDescription) {
 }
 
 export function extractJSON(raw) {
+  if (typeof raw !== 'string' || !raw.trim()) {
+    throw new Error('AI returned empty content')
+  }
+
   const str = raw.trim()
   const codeBlock = str.match(/```(?:json)?\s*([\s\S]*?)```/)
   if (codeBlock) {

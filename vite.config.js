@@ -15,7 +15,7 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      // 开发时把 /api/* 转发到本地 API 服务器
+      // 开发时将 /api/* 转发到本地 API 服务
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,

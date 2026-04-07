@@ -69,7 +69,7 @@
 
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
         <div class="flex items-center gap-2 mb-2">
-          <span class="text-base">建</span>
+          <span class="text-base">💡</span>
           <h2 class="text-sm font-semibold text-blue-800">AI 整体建议</h2>
         </div>
         <p class="text-sm text-blue-900 leading-relaxed">{{ report.overallSuggestion }}</p>
@@ -83,6 +83,8 @@
             :key="i"
             :review="review"
             :index="i + 1"
+            :saved="savedIndices.has(i)"
+            :saving="savingIndices.has(i)"
             @save-to-notebook="saveToNotebook(review, i)"
           />
         </div>
@@ -105,7 +107,7 @@
     </div>
 
     <div v-else class="max-w-xl mx-auto px-4 mt-16 text-center">
-      <p class="text-4xl mb-4">错</p>
+      <p class="text-4xl mb-4">⚠</p>
       <p class="text-gray-600 font-medium mb-1">报告生成失败</p>
       <p class="text-sm text-gray-400 mb-6">{{ errorMsg }}</p>
       <button
@@ -119,19 +121,21 @@
     <Transition name="toast">
       <div
         v-if="toastVisible"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 z-50"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 text-white text-sm px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 z-50"
+        :class="toastTone === 'error' ? 'bg-red-600' : 'bg-gray-900'"
       >
-        <svg class="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        <svg class="w-4 h-4" :class="toastTone === 'error' ? 'text-red-100' : 'text-green-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path v-if="toastTone === 'error'" stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3Z" />
+          <path v-else stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
-        已保存到错题本
+        {{ toastMessage }}
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useInterviewStore } from '@/stores/interview.js'
 import { useNotebookStore } from '@/stores/notebook.js'
@@ -147,10 +151,15 @@ const report = ref(null)
 const isLoading = ref(true)
 const errorMsg = ref('')
 const toastVisible = ref(false)
+const toastMessage = ref('')
+const toastTone = ref('success')
 
 const displayScore = ref(0)
 const ringProgress = ref(0)
 const savedIndices = ref(new Set())
+const savingIndices = ref(new Set())
+
+let toastTimerId = null
 
 function animateScore(target) {
   const duration = 900
@@ -204,7 +213,7 @@ const DIMENSION_LABELS = {
   logic: '逻辑性',
   completeness: '完整性',
   depth: '专业深度',
-  expression: '表达力',
+  expression: '表达能力',
   relevance: '岗位匹配',
 }
 
@@ -239,6 +248,10 @@ async function fetchReport() {
       throw new Error('对话记录为空，无法生成报告。')
     }
 
+    if (!conversation.some((message) => message.role === 'user')) {
+      throw new Error('至少完成 1 轮问答后才能生成报告。')
+    }
+
     const result = await evaluateInterview({
       jobType: store.jobType,
       jobDescription: store.jobDescription,
@@ -270,28 +283,53 @@ onMounted(() => {
   fetchReport()
 })
 
+onUnmounted(() => {
+  if (toastTimerId) {
+    clearTimeout(toastTimerId)
+  }
+})
+
 async function saveToNotebook(review, idx) {
-  if (savedIndices.value.has(idx)) {
+  if (savedIndices.value.has(idx) || savingIndices.value.has(idx)) {
     return
   }
 
-  await notebookStore.addEntry({
-    jobType: store.jobType,
-    question: review.question,
-    userAnswer: review.userAnswer,
-    feedback: review.feedback,
-    betterDirection: review.betterDirection,
-    score: review.score,
-  })
+  savingIndices.value = new Set(savingIndices.value).add(idx)
 
-  savedIndices.value.add(idx)
-  showToast()
+  try {
+    await notebookStore.addEntry({
+      jobType: store.jobType,
+      question: review.question,
+      userAnswer: review.userAnswer,
+      feedback: review.feedback,
+      betterDirection: review.betterDirection,
+      score: review.score,
+    })
+
+    savedIndices.value = new Set(savedIndices.value).add(idx)
+    showToast('已保存到错题本', 'success')
+  } catch (error) {
+    console.error('[ReportPage] save to notebook failed:', error)
+    showToast(error?.message || '保存失败，请稍后重试', 'error')
+  } finally {
+    const nextSaving = new Set(savingIndices.value)
+    nextSaving.delete(idx)
+    savingIndices.value = nextSaving
+  }
 }
 
-function showToast() {
+function showToast(message, tone = 'success') {
+  toastMessage.value = message
+  toastTone.value = tone
   toastVisible.value = true
-  setTimeout(() => {
+
+  if (toastTimerId) {
+    clearTimeout(toastTimerId)
+  }
+
+  toastTimerId = setTimeout(() => {
     toastVisible.value = false
+    toastTimerId = null
   }, 2200)
 }
 

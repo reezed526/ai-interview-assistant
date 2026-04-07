@@ -7,6 +7,7 @@ export async function sendChatMessage({
   followUpCount,
   interviewId,
   onChunk,
+  onMeta,
 }) {
   const response = await fetch('/api/chat', {
     method: 'POST',
@@ -58,6 +59,7 @@ export async function sendChatMessage({
         const parsed = JSON.parse(payload)
         if (parsed.meta) {
           meta = parsed.meta
+          onMeta?.(parsed.meta)
           continue
         }
         if (parsed.error) throw new Error(parsed.error)

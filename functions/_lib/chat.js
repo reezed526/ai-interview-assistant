@@ -15,7 +15,6 @@ export function buildSystemPrompt(jobType, jobDescription, action) {
   }[action]
 
   return `你是一位经验丰富的中文面试官，正在面试一位应聘“${jobType}”岗位的候选人。
-
 ## 岗位 JD
 ${jobDescription?.trim() || '（未提供 JD，请根据岗位类型提出通用但专业的面试问题）'}
 
@@ -28,7 +27,7 @@ ${actionDirective}
 - 基于 JD 中的核心能力要求生成面试问题
 - 问题类型覆盖：行为题、情景题、专业题
 - 整场面试共 5 到 8 个主问题
-- 难度循序渐进：前 2 题用于暖场，中间考察核心能力，最后 1 到 2 题可适度增加压力
+- 难度循序渐进：前 2 题用于热身，中间考察核心能力，最后 1 到 2 题可适度增加压力
 
 ### 追问规则
 - 如果候选人的回答存在以下问题，优先追问而不是直接进入下一题：
@@ -60,7 +59,6 @@ export function buildClassifierPrompt(jobType, jobDescription, questionCount, to
     .join('\n\n')
 
   return `你是一个面试流程控制器，需要判断下一轮面试官回复属于哪一种动作。
-
 候选岗位：${jobType}
 岗位 JD：${jobDescription?.trim() || '未提供'}
 已完成主问题数：${questionCount}

@@ -85,7 +85,7 @@
             </span>
           </div>
           <p v-if="!authStore.canStartInterview" class="text-xs text-red-500 mt-3">
-            免费版目前最多支持 3 次面试模拟。订阅计划即将上线。
+            免费版目前最多支持 3 次面试模拟，订阅计划即将上线。
           </p>
           <p v-else-if="authStore.subscriptionPlan === 'free'" class="text-xs text-blue-600 mt-3">
             新账号默认开通免费计划，后续可在这里升级订阅。
@@ -101,7 +101,7 @@
           <input
             v-model.trim="selectedJob"
             type="text"
-            placeholder="输入目标岗位，如：字节跳动 C端产品经理"
+            placeholder="输入目标岗位，如：字节跳动 C 端产品经理"
             class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm text-gray-700 placeholder-gray-300 bg-white transition-shadow"
             @input="showJobError = false"
           />
@@ -196,7 +196,7 @@ const quickJobs = [
 ]
 
 const steps = [
-  { icon: '题', label: 'AI 出题', desc: '根据岗位要求生成问题' },
+  { icon: '问', label: 'AI 出题', desc: '根据岗位要求生成问题' },
   { icon: '追', label: '深入追问', desc: '围绕细节继续深挖' },
   { icon: '报', label: '多维评分', desc: '生成报告和逐题点评' },
 ]

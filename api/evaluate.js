@@ -49,14 +49,17 @@ export default async function handler(req, res) {
       max_tokens: 2048,
     })
 
-    const raw = completion.choices[0].message.content
+    const raw = completion.choices[0].message.content ?? ''
     let result
 
     try {
       result = extractJSON(raw)
-    } catch {
-      console.error('[evaluate] JSON parse failed, raw:', raw.slice(0, 200))
-      return res.status(502).json({ error: 'AI returned invalid JSON', raw: raw.slice(0, 500) })
+    } catch (parseError) {
+      console.error('[evaluate] JSON parse failed:', parseError.message, 'raw:', raw.slice(0, 200))
+      return res.status(502).json({
+        error: parseError.message === 'AI returned empty content' ? 'AI returned empty content' : 'AI returned invalid JSON',
+        raw: raw.slice(0, 500),
+      })
     }
 
     result.totalScore ??= 0

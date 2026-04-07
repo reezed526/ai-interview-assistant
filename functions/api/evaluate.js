@@ -52,13 +52,19 @@ export async function onRequestPost(context) {
       max_tokens: 2048,
     })
 
-    const raw = completion.choices[0].message.content
+    const raw = completion.choices[0].message.content ?? ''
     let result
 
     try {
       result = extractJSON(raw)
-    } catch {
-      return Response.json({ error: 'AI returned invalid JSON', raw: raw.slice(0, 500) }, { status: 502 })
+    } catch (parseError) {
+      return Response.json(
+        {
+          error: parseError.message === 'AI returned empty content' ? 'AI returned empty content' : 'AI returned invalid JSON',
+          raw: raw.slice(0, 500),
+        },
+        { status: 502 },
+      )
     }
 
     result.totalScore ??= 0

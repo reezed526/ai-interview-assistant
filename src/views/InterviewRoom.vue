@@ -19,14 +19,16 @@
 
       <button
         v-if="store.status === 'in-progress'"
+        :disabled="isLoading"
         @click="confirmEnd"
-        class="text-xs text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-200 rounded-xl px-3 py-1.5 transition-colors min-h-[36px]"
+        class="text-xs border rounded-xl px-3 py-1.5 transition-colors min-h-[36px] disabled:cursor-not-allowed disabled:text-gray-300 disabled:border-gray-100"
+        :class="isLoading ? '' : 'text-gray-400 hover:text-red-500 border-gray-200 hover:border-red-200'"
       >
         结束面试
       </button>
     </header>
 
-    <div ref="listRef" class="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+    <div class="flex-1 overflow-y-auto px-4 py-5 space-y-4">
       <ChatBubble
         v-for="msg in store.messages"
         :key="msg.id"
@@ -57,7 +59,7 @@
         @click.self="showEndOverlay = false"
       >
         <div class="bg-white rounded-3xl px-8 py-8 text-center shadow-2xl w-full max-w-sm">
-          <div class="text-5xl mb-4">报</div>
+          <div class="text-5xl mb-4">📝</div>
           <h2 class="text-xl font-bold text-gray-900 mb-2">面试结束</h2>
           <p class="text-sm text-gray-500 mb-6 leading-relaxed">
             AI 正在整理你在「{{ store.jobType }}」岗位上的表现。
@@ -95,7 +97,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { useInterviewStore } from '@/stores/interview.js'
 import { sendChatMessage } from '@/services/api.js'
@@ -106,13 +108,15 @@ const router = useRouter()
 const authStore = useAuthStore()
 const store = useInterviewStore()
 
-const listRef = ref(null)
 const bottomRef = ref(null)
 const isLoading = ref(false)
 const hasError = ref(false)
 const showEndOverlay = ref(false)
+const liveProgressMeta = ref(null)
 
-const progressText = computed(() => `第 ${store.currentQuestionIndex} 题 / 共 ${store.totalQuestionCount} 题`)
+const displayQuestionIndex = computed(() => liveProgressMeta.value?.questionIndex ?? store.currentQuestionIndex)
+const displayTotalQuestionCount = computed(() => liveProgressMeta.value?.totalQuestionCount ?? store.totalQuestionCount)
+const progressText = computed(() => `第 ${displayQuestionIndex.value} 题 / 共 ${displayTotalQuestionCount.value} 题`)
 
 onMounted(() => {
   if (store.status !== 'in-progress') {
@@ -120,12 +124,19 @@ onMounted(() => {
     return
   }
 
-  if (store.messages.length === 0) {
-    requestAI()
+  if (store.messages.length > 0) {
+    void store.reset()
+    router.replace('/')
     return
   }
 
-  scrollToBottom('instant')
+  requestAI()
+})
+
+onBeforeRouteLeave((to) => {
+  if (store.status === 'in-progress' && to.path !== '/report') {
+    void store.reset()
+  }
 })
 
 async function scrollToBottom(behavior = 'smooth') {
@@ -136,6 +147,7 @@ async function scrollToBottom(behavior = 'smooth') {
 async function requestAI() {
   isLoading.value = true
   hasError.value = false
+  liveProgressMeta.value = null
 
   const stateBeforeRequest = {
     questionCount: store.questionCount,
@@ -165,6 +177,9 @@ async function requestAI() {
       totalQuestionCount: store.totalQuestionCount,
       followUpCount: store.followUpCount,
       interviewId: store.interviewId,
+      onMeta(nextMeta) {
+        liveProgressMeta.value = nextMeta
+      },
       onChunk(chunk) {
         store.appendToLastMessage(chunk)
         bottomRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -176,6 +191,7 @@ async function requestAI() {
     }
     store.messages.pop()
     hasError.value = true
+    liveProgressMeta.value = null
     console.error('[InterviewRoom] chat request failed:', error)
   } finally {
     store.setStreamingDone(msgId)
@@ -186,6 +202,8 @@ async function requestAI() {
       finalizeAssistantTurn(msgId, meta, stateBeforeRequest)
       checkInterviewEnd()
     }
+
+    liveProgressMeta.value = null
   }
 }
 
@@ -196,7 +214,8 @@ function retryLastRequest() {
 
 function checkInterviewEnd() {
   const last = store.lastMessage
-  if (last?.role === 'assistant' && last.content.startsWith('好的，今天的面试就到这里')) {
+  const normalized = typeof last?.content === 'string' ? last.content.trimStart() : ''
+  if (last?.role === 'assistant' && /^好的[，,]?今天的面试就到这里/.test(normalized)) {
     store.finishInterview()
     showEndOverlay.value = true
   }
@@ -206,6 +225,7 @@ function finalizeAssistantTurn(msgId, meta, stateBeforeRequest) {
   if (meta?.usage) {
     authStore.applyUsage(meta.usage)
   }
+
   const isFollowUp = meta?.action === 'follow_up'
   const questionIndex = meta?.questionIndex
     ?? (isFollowUp ? Math.max(stateBeforeRequest.questionCount, 1) : stateBeforeRequest.questionCount + 1)
@@ -232,11 +252,19 @@ async function handleSend(text) {
 }
 
 function confirmEnd() {
+  if (isLoading.value) {
+    return
+  }
+
   store.finishInterview()
   showEndOverlay.value = true
 }
 
 function goToReport() {
+  if (isLoading.value) {
+    return
+  }
+
   router.push('/report')
 }
 </script>

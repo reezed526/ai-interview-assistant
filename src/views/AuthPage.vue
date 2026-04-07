@@ -14,7 +14,8 @@
         </h1>
 
         <p class="mt-4 max-w-xl text-sm leading-7 text-slate-300">
-          当前版本已支持云端共享注册与登录。其他人访问你的 Cloudflare 站点，也可以创建自己的账号并登录使用。
+          当前版本已支持云端共享注册与登录。其他人访问你的 Cloudflare 站点，
+          也可以创建自己的账号并登录使用。
         </p>
 
         <div class="mt-10 grid gap-4 sm:grid-cols-3">
@@ -113,7 +114,7 @@
         </p>
 
         <p class="mt-4 rounded-2xl bg-blue-50 px-4 py-3 text-xs leading-6 text-blue-700">
-          新账号默认开通免费计划，当前可进行 3 次面试模拟。订阅计划后续会接在这个账号体系上。
+          新账号默认开通免费计划，当前可进行 3 次面试模拟。订阅计划后续会接在这个账号体系中。
         </p>
       </section>
     </div>
@@ -140,7 +141,7 @@ const tabs = [
 const features = [
   { icon: '云', title: '共享账号', desc: '账号注册信息保存在云端，其他人也可以直接创建和登录。' },
   { icon: '问', title: '智能面试', desc: '根据岗位和 JD 自动生成面试问题与追问。' },
-  { icon: '评', title: '即时评估', desc: '在报告页生成分维度评分与逐题反馈。' },
+  { icon: '评', title: '即时评估', desc: '在报告页生成多维度评分与逐题反馈。' },
 ]
 
 const mode = ref('login')

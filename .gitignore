@@ -1,22 +1,27 @@
-# 依赖
+# dependencies
 node_modules/
 
-# 构建产物
+# build output
 dist/
 .vercel/
+.wrangler/
 
-# 环境变量（含 API Key，绝对不能提交）
+# local environment
 .env
 .env.local
 .env*.local
 
-# 编辑器
+# editor settings
 .vscode/settings.json
 .idea/
 
-# Claude Code 本地配置
+# local tool config
 .claude/
 
-# 系统文件
+# local runtime data
+*.log
+.data/
+
+# system files
 .DS_Store
 Thumbs.db
