@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_salt TEXT NOT NULL,
   created_at TEXT NOT NULL,
   subscription_plan TEXT NOT NULL DEFAULT 'free',
-  interview_quota INTEGER NOT NULL DEFAULT 3,
+  interview_quota INTEGER NOT NULL DEFAULT 10,
   interview_used INTEGER NOT NULL DEFAULT 0
 );
 

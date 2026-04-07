@@ -14,7 +14,7 @@ CREATE TABLE users_new (
   password_salt TEXT NOT NULL,
   created_at TEXT NOT NULL,
   subscription_plan TEXT NOT NULL DEFAULT 'free',
-  interview_quota INTEGER NOT NULL DEFAULT 3,
+  interview_quota INTEGER NOT NULL DEFAULT 10,
   interview_used INTEGER NOT NULL DEFAULT 0
 );
 
@@ -42,7 +42,7 @@ SELECT
   password_salt,
   created_at,
   COALESCE(subscription_plan, 'free') AS subscription_plan,
-  COALESCE(interview_quota, 3) AS interview_quota,
+  COALESCE(interview_quota, 10) AS interview_quota,
   COALESCE(interview_used, 0) AS interview_used
 FROM users;
 

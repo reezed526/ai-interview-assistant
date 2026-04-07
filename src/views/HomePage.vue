@@ -73,7 +73,7 @@
                   当前套餐可无限次进行面试模拟
                 </template>
                 <template v-else>
-                  剩余面试次数：{{ authStore.interviewRemaining }} / {{ authStore.currentUser?.interviewQuota ?? 3 }}
+                  剩余面试次数：{{ authStore.interviewRemaining }} / {{ authStore.currentUser?.interviewQuota ?? 10 }}
                 </template>
               </p>
             </div>
@@ -85,7 +85,7 @@
             </span>
           </div>
           <p v-if="!authStore.canStartInterview" class="text-xs text-red-500 mt-3">
-            免费版目前最多支持 3 次面试模拟，订阅计划即将上线。
+            免费版目前最多支持 10 次面试模拟，订阅计划即将上线。
           </p>
           <p v-else-if="authStore.subscriptionPlan === 'free'" class="text-xs text-blue-600 mt-3">
             新账号默认开通免费计划，后续可在这里升级订阅。

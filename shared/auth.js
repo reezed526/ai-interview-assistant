@@ -2,7 +2,7 @@ export const AUTH_COOKIE_NAME = 'ai_auth_session'
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
 export const FREE_PLAN_CODE = 'free'
 export const PRO_PLAN_CODE = 'pro'
-export const FREE_INTERVIEW_QUOTA = 3
+export const FREE_INTERVIEW_QUOTA = 10
 export const UNLIMITED_INTERVIEW_QUOTA = -1
 
 export const ADMIN_UNLIMITED_IDENTIFIERS = {

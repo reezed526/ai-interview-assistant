@@ -125,7 +125,7 @@ export async function ensureInterviewQuota(req, res, interviewId) {
 
     if (remaining <= 0) {
       json(res, 403, {
-        error: '免费版面试次数已用完，当前最多可进行 3 次模拟。订阅计划即将上线。',
+        error: '免费版面试次数已用完，当前最多可进行 10 次模拟。订阅计划即将上线。',
         code: 'INTERVIEW_QUOTA_EXCEEDED',
         usage: sanitizeUser(auth.user),
       })

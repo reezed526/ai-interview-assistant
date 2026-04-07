@@ -86,7 +86,25 @@ git push
 
 如果你的 Cloudflare Pages 已连接 Git 仓库，推送后会自动重新部署。
 
-## 8. 部署后验证
+## 8. 如果你要把所有普通账号免费次数重置为 10 次
+
+打开 D1 数据库的 `Console`，执行：
+
+- [reset-free-quota-to-10.sql](/c:/Users/45274/Desktop/ai-interview-assistant/database/reset-free-quota-to-10.sql)
+
+这个脚本会：
+
+- 把所有普通账号的 `interview_quota` 设为 `10`
+- 把所有普通账号的 `interview_used` 清零
+- 保留你的白名单账号不变
+
+建议顺序：
+
+1. 先执行用户名迁移（如果你的库还是旧结构）
+2. 再执行免费额度重置脚本
+3. 最后部署最新代码
+
+## 9. 部署后验证
 
 建议按下面顺序验证：
 
