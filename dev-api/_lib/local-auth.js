@@ -71,7 +71,7 @@ function getSecureFlag(req) {
 }
 
 function getLoginValue(user) {
-  return normalizeUsername(user.username ?? user.email ?? '')
+  return normalizeUsername(user.username ?? '')
 }
 
 export async function requireAuthenticatedUser(req, res) {
@@ -173,7 +173,6 @@ export async function handleRegister(req, res) {
     id: userId,
     name: name.trim(),
     username: normalizedUsername,
-    email: null,
     password_hash: passwordHash,
     password_salt: passwordSalt,
     created_at: createdAt,

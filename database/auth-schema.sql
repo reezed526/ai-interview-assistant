@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   username TEXT NOT NULL UNIQUE,
-  email TEXT UNIQUE,
   password_hash TEXT NOT NULL,
   password_salt TEXT NOT NULL,
   created_at TEXT NOT NULL,
@@ -12,7 +11,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 CREATE TABLE IF NOT EXISTS interview_attempts (
   id TEXT PRIMARY KEY,

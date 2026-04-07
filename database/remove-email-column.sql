@@ -1,5 +1,5 @@
--- One-time migration for moving the users table from email-first auth to username-first auth.
--- This final schema does not keep the email column.
+-- Use this only if your users table already has username,
+-- but you still want to permanently remove the email column.
 
 PRAGMA foreign_keys = OFF;
 
@@ -31,7 +31,7 @@ INSERT INTO users_new (
 SELECT
   id,
   name,
-  LOWER(TRIM(email)) AS username,
+  username,
   password_hash,
   password_salt,
   created_at,

@@ -6,4 +6,4 @@ SET
   interview_quota = 10,
   interview_used = 0
 WHERE COALESCE(name, '') NOT IN ('lzj121218')
-  AND COALESCE(username, email, '') NOT IN ('452740468@qq.com');
+  AND COALESCE(username, '') NOT IN ('452740468@qq.com', 'lzj121218');

@@ -7,7 +7,7 @@ export const UNLIMITED_INTERVIEW_QUOTA = -1
 
 export const ADMIN_UNLIMITED_IDENTIFIERS = {
   names: ['lzj121218'],
-  usernames: ['452740468@qq.com'],
+  usernames: ['452740468@qq.com', 'lzj121218'],
 }
 
 export const SUBSCRIPTION_PLANS = {
@@ -112,7 +112,7 @@ export function getPlanDefinition(planCode = FREE_PLAN_CODE) {
 }
 
 function resolveUsername(user) {
-  return normalizeUsername(String(user?.username ?? user?.email ?? '').trim() || '')
+  return normalizeUsername(String(user?.username ?? '').trim() || '')
 }
 
 export function hasUnlimitedInterviewAccess(user) {
@@ -238,13 +238,12 @@ export function sanitizeUser(user) {
     ? UNLIMITED_INTERVIEW_QUOTA
     : Number(user.interview_quota ?? user.interviewQuota ?? planDefinition.interviewQuota)
   const interviewUsed = Number(user.interview_used ?? user.interviewUsed ?? 0)
-  const username = user.username ?? user.email ?? ''
+  const username = user.username ?? ''
 
   return {
     id: user.id,
     name: user.name,
     username,
-    email: user.email ?? null,
     createdAt: user.created_at ?? user.createdAt ?? null,
     subscriptionPlan: resolvedPlanCode,
     subscriptionLabel: planDefinition.label,
